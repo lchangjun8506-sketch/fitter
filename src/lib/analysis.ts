@@ -1,4 +1,5 @@
 import type { WorkoutLog, WorkoutSet } from './types';
+import { todayStr } from './date';
 
 export function setVolume(sets: WorkoutSet[]): number {
   return sets.reduce(
@@ -53,3 +54,31 @@ export function coachingTip(history: WorkoutLog[]): Tip | null {
     return { tone: 'warn', title: '3회 연속 같은 무게', desc: '횟수를 2회 늘리거나 마지막 세트에 드롭세트를 더해 보세요.' };
   return { tone: 'keep', title: '같은 무게, 1~2회 더', desc: `지난 기록 ${w}kg × ${r}회.` };
 }
+
+export const dayStr = (offset: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return todayStr(d);
+};
+
+/** 연속 운동 일수 (오늘 또는 어제까지 이어진 경우) */
+export function streakOf(logs: WorkoutLog[]) {
+  const days = new Set(logs.map((l) => l.date));
+  const start = days.has(dayStr(0)) ? 0 : days.has(dayStr(-1)) ? -1 : null;
+  if (start === null) return 0;
+  let n = 0;
+  while (days.has(dayStr(start - n))) n++;
+  return n;
+}
+
+/** 무게 조절 단위: 20kg 미만(덤벨·고립)은 1kg, 그 이상은 2.5kg */
+export const weightStep = (w: number, dir: 1 | -1) => (dir > 0 ? (w < 20 ? 1 : 2.5) : w <= 20 ? 1 : 2.5);
+
+/** 세트 요약: "40kg × 9 · 3세트" 또는 "40×9 / 35×10" */
+export const setsLabel = (sets: WorkoutSet[]) => {
+  if (!sets.length) return '';
+  const top = sets[0];
+  const same = sets.every((s) => s.weight === top.weight && s.reps === top.reps);
+  if (top.weight === 0) return `무게 찾기 · ${sets.length}세트`;
+  return same ? `${top.weight}kg × ${top.reps} · ${sets.length}세트` : sets.map((s) => `${s.weight}×${s.reps}`).join(' / ');
+};

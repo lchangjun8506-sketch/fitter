@@ -1,43 +1,64 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChartNoAxesColumn, CircleUserRound, Dumbbell, Loader2, Swords } from 'lucide-react';
+import { ChartNoAxesColumn, ChevronLeft, CircleUserRound, Dumbbell, FlaskConical, Loader2 } from 'lucide-react';
 import { useWorkout } from './lib/useWorkout';
 import { useAuth } from './lib/auth';
 import { supabase } from './lib/supabase';
 import { CloudRepo, deviceRepo } from './lib/storage';
-import BattleTab from './components/BattleTab';
+import LabTab, { LAB_TITLES, type LabSub } from './components/LabTab';
 import MyTab, { type MySub } from './components/MyTab';
 import StatsTab, { type StatsSub } from './components/StatsTab';
-import RoutineCard, { type PickTarget } from './components/RoutineCard';
+import TodayPanel from './components/RoutineCard';
+import ExerciseSheet, { type ExerciseTarget } from './components/ExerciseSheet';
+import ExercisePicker from './components/ExercisePicker';
 import { useInBody } from './lib/useInBody';
-import { todayStr } from './lib/date';
-import RestTimer from './components/RestTimer';
-import LogForm from './components/LogForm';
+import RestPill from './components/RestTimer';
+import { useRest } from './lib/rest';
 import AddExerciseSheet from './components/AddExerciseSheet';
 import Toast from './components/Toast';
 import Gate from './components/Gate';
-import type { Routine, WorkoutLog } from './lib/types';
+import { todayStr } from './lib/date';
+import type { Routine } from './lib/types';
 
-type Tab = 'log' | 'battle' | 'stats' | 'me';
+type Tab = 'log' | 'stats' | 'lab' | 'me';
 const TABS: { id: Tab; label: string; Icon: typeof Dumbbell }[] = [
   { id: 'log', label: '기록', Icon: Dumbbell },
-  { id: 'battle', label: '대결', Icon: Swords },
   { id: 'stats', label: '분석', Icon: ChartNoAxesColumn },
+  { id: 'lab', label: '실험실', Icon: FlaskConical },
   { id: 'me', label: 'MY', Icon: CircleUserRound },
 ];
-const TITLES: Record<Tab, string> = { log: '오늘의 운동', battle: '대결', stats: '분석', me: 'MY' };
+const TITLES: Record<Tab, string> = { log: '오늘의 운동', stats: '분석', lab: '실험실', me: 'MY' };
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
-const TAB_IDS: Tab[] = ['log', 'battle', 'stats', 'me'];
+const TAB_IDS: Tab[] = ['log', 'stats', 'lab', 'me'];
+const LAB_SUBS: LabSub[] = ['battle', '1rm', 'plates'];
 
-/** 주소: #battle, #stats, #stats/inbody, #me, #me/history (예전 #history → MY·히스토리) */
-interface Route { tab: Tab; stats: StatsSub; me: MySub }
+/** 주소: #stats, #stats/inbody, #lab, #lab/battle|1rm|plates, #me, #me/history (예전 #history → MY·히스토리, #battle → 실험실·대결) */
+interface Route { tab: Tab; stats: StatsSub; me: MySub; lab: LabSub }
 const parseHash = (hash: string): Route => {
   const [t, sub] = hash.replace(/^#/, '').split('/');
-  if (t === 'history') return { tab: 'me', stats: 'workout', me: 'history' };
+  const base: Route = { tab: 'log', stats: 'workout', me: 'dash', lab: 'home' };
+  if (t === 'history') return { ...base, tab: 'me', me: 'history' };
+  if (t === 'battle') return { ...base, tab: 'lab', lab: 'battle' };
   const tab = TAB_IDS.includes(t as Tab) ? (t as Tab) : 'log';
-  return { tab, stats: tab === 'stats' && sub === 'inbody' ? 'inbody' : 'workout', me: tab === 'me' && sub === 'history' ? 'history' : 'dash' };
+  return {
+    tab,
+    stats: tab === 'stats' && sub === 'inbody' ? 'inbody' : 'workout',
+    me: tab === 'me' && sub === 'history' ? 'history' : 'dash',
+    lab: tab === 'lab' && LAB_SUBS.includes(sub as LabSub) ? (sub as LabSub) : 'home',
+  };
 };
 const toHash = (r: Route) =>
-  r.tab === 'log' ? '' : r.tab === 'stats' && r.stats === 'inbody' ? '#stats/inbody' : r.tab === 'me' && r.me === 'history' ? '#me/history' : `#${r.tab}`;
+  r.tab === 'log'
+    ? ''
+    : r.tab === 'stats' && r.stats === 'inbody'
+      ? '#stats/inbody'
+      : r.tab === 'me' && r.me === 'history'
+        ? '#me/history'
+        : r.tab === 'lab' && r.lab !== 'home'
+          ? `#lab/${r.lab}`
+          : `#${r.tab}`;
+
+/** 화면 위에 뜨는 시트 (한 번에 하나, 뒤로가기로 닫힘) */
+type Overlay = { kind: 'none' } | { kind: 'picker'; routine: Routine } | { kind: 'add'; routine: Routine } | { kind: 'exercise' };
 
 // 소셜 로그인에서 돌아왔으면 로그인 전에 보던 화면으로
 const initialRoute = (): Route => {
@@ -67,9 +88,11 @@ export default function App() {
   const [route, setRoute] = useState<Route>(initialRoute);
   const tab = route.tab;
   const [typing, setTyping] = useState(false);
-  const [editing, setEditing] = useState<WorkoutLog | null>(null);
-  const [sheet, setSheet] = useState<{ open: boolean; routine: Routine }>({ open: false, routine: '가슴·삼두' });
-  const [pending, setPending] = useState<PickTarget | null>(null);
+  const [overlay, setOverlay] = useState<Overlay>({ kind: 'none' });
+  const [target, setTarget] = useState<ExerciseTarget | null>(null);
+  const [lastRoutine, setLastRoutine] = useState<Routine>('가슴·삼두');
+  const [aiSignal, setAiSignal] = useState(0);
+  const rest = useRest();
   const [toast, setToast] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -83,7 +106,7 @@ export default function App() {
   useEffect(() => {
     const onPop = () => {
       setRoute(parseHash(location.hash));
-      setSheet((s) => (s.open ? { ...s, open: false } : s));
+      setOverlay({ kind: 'none' });
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
@@ -102,13 +125,19 @@ export default function App() {
     };
   }, []);
 
-  const openSheet = (routine: Routine) => {
-    history.pushState({ sheet: true }, '');
-    setSheet({ open: true, routine });
+  // 시트 열기: 처음 열 때만 히스토리에 한 칸 (시트끼리 바뀔 땐 그대로)
+  const show = (o: Overlay) => {
+    if (!history.state?.sheet) history.pushState({ sheet: true }, '');
+    if (o.kind === 'picker' || o.kind === 'add') setLastRoutine(o.routine);
+    setOverlay(o);
   };
-  const closeSheet = () => {
+  const closeOverlay = () => {
     if (history.state?.sheet) history.back(); // popstate에서 닫힘
-    else setSheet((s) => ({ ...s, open: false }));
+    else setOverlay({ kind: 'none' });
+  };
+  const openExercise = (t: ExerciseTarget) => {
+    setTarget(t);
+    show({ kind: 'exercise' });
   };
 
   // 관문(시작·로그인 화면)이 덮고 있는 동안 앱은 포커스·스크린리더에서도 막음
@@ -122,11 +151,11 @@ export default function App() {
     if (!open && auth.ready && !auth.session) {
       history.replaceState(null, '', location.pathname + location.search);
       setRoute(parseHash(''));
-      setEditing(null);
+      setOverlay({ kind: 'none' });
+      setTarget(null);
     }
   }, [auth.ready, auth.session]);
 
-  const todayCount = useMemo(() => w.logs.filter((l) => l.date === todayStr()).length, [w.logs]);
 
   const navigate = (next: Route) => {
     const h = toHash(next);
@@ -134,26 +163,28 @@ export default function App() {
     setRoute(next);
     window.scrollTo({ top: 0 });
   };
-  const go = (t: Tab) => navigate({ ...route, tab: t });
+  // 탭을 다시 누르면 그 탭의 첫 화면으로
+  const go = (t: Tab) => navigate(t === route.tab ? { ...route, lab: 'home' } : { ...route, tab: t });
+  const pillShown = ready && overlay.kind !== 'exercise' && (rest.running || rest.done);
+  const labSubPage = tab === 'lab' && route.lab !== 'home';
 
   return (
     <>
     <Gate onOpenChange={onGateChange} />
-    <div ref={appRef} className="min-h-[100dvh] pb-[calc(88px+env(safe-area-inset-bottom))]">
+    <div ref={appRef} className={`min-h-[100dvh] ${pillShown ? 'pb-[calc(152px+env(safe-area-inset-bottom))]' : 'pb-[calc(88px+env(safe-area-inset-bottom))]'}`}>
       <div className={ready ? 'app-enter' : 'opacity-0'}>
       <header className="max-w-md mx-auto px-5 pt-[max(env(safe-area-inset-top),20px)] pb-5">
-        <div className="flex items-center gap-2 h-5">
-          <p className="caption">{tab === 'log' ? todayLabel() : tab === 'stats' ? `총 ${w.logs.length}개 기록` : auth.handle ?? (auth.session ? '닉네임을 정해 주세요' : '로그인 전')}</p>
+        <div className="flex items-center gap-2 h-9 -mb-2">
+          {labSubPage ? (
+            <button onClick={() => navigate({ ...route, lab: 'home' })} className="tap -ml-1.5 h-9 flex items-center gap-0.5 text-[15px] font-medium text-accent">
+              <ChevronLeft aria-hidden className="w-5 h-5" strokeWidth={2.25} /> 실험실
+            </button>
+          ) : (
+            <p className="caption">{tab === 'log' ? todayLabel() : tab === 'stats' ? `총 ${w.logs.length}개 기록` : tab === 'lab' ? '새로 시도하는 기능' : auth.handle ?? (auth.session ? '닉네임을 정해 주세요' : '로그인 전')}</p>
+          )}
           {w.loading && <Loader2 aria-label="불러오는 중" className="w-3.5 h-3.5 animate-spin text-sub" />}
         </div>
-        <div className="flex items-end justify-between">
-          <h1 className="text-[34px] font-bold leading-tight tracking-[-0.02em]">{TITLES[tab]}</h1>
-          {tab === 'log' && (
-            <p className="caption pb-1.5">
-              오늘 <span className="num text-ink text-[17px]">{todayCount}</span> 종목
-            </p>
-          )}
-        </div>
+        <h1 className="text-[34px] font-bold leading-tight tracking-[-0.02em]">{tab === 'lab' ? LAB_TITLES[route.lab] : TITLES[tab]}</h1>
       </header>
 
       <main className="max-w-md mx-auto px-4 space-y-6">
@@ -163,31 +194,32 @@ export default function App() {
           </div>
         )}
 
-        <div className={tab === 'log' ? 'space-y-6' : 'hidden'}>
-          <RoutineCard logs={w.logs} custom={w.custom} inbody={inbody.records} onPick={(t) => setPending({ ...t })} toast={setToast} />
-          <RestTimer />
-          <LogForm
+        {/* 기록 화면은 항상 붙여 둠 (실험실 → AI 코치로 넘어올 때 시트를 바로 열 수 있게) */}
+        <div className={tab === 'log' ? '' : 'hidden'}>
+          <TodayPanel
             logs={w.logs}
             custom={w.custom}
-            editing={editing}
-            busy={w.loading}
-            pendingExercise={pending}
-            onOpenAddExercise={openSheet}
-            onCancelEdit={() => setEditing(null)}
-            onSave={async (log, id) => {
-              try {
-                if (id && editing) await w.update({ ...editing, ...log });
-                else await w.add(log);
-                setToast(id ? '수정했습니다' : '저장했습니다');
-                setEditing(null);
-              } catch (e) {
-                setToast(`저장 실패: ${(e as Error).message}`);
-              }
-            }}
+            inbody={inbody.records}
+            onOpen={openExercise}
+            onOther={(routine) => show({ kind: 'picker', routine })}
+            toast={setToast}
+            aiSignal={aiSignal}
           />
         </div>
 
-        {tab === 'battle' && <BattleTab toast={setToast} customExercises={w.custom.map((c) => c.exercise)} />}
+        {tab === 'lab' && (
+          <LabTab
+            sub={route.lab}
+            onSub={(lab) => navigate({ ...route, lab })}
+            onAskAi={() => {
+              navigate({ ...route, tab: 'log' });
+              setAiSignal((n) => n + 1);
+            }}
+            logs={w.logs}
+            customExercises={w.custom.map((c) => c.exercise)}
+            toast={setToast}
+          />
+        )}
 
         {tab === 'stats' && (
           <StatsTab
@@ -210,10 +242,7 @@ export default function App() {
             cloud={cloud}
             toast={setToast}
             onImported={() => w.refresh()}
-            onEdit={(log) => {
-              setEditing(log);
-              go('log');
-            }}
+            onEdit={(log) => openExercise({ routine: log.routine, exercise: log.exercise, editing: log })}
             onDelete={async (id) => {
               if (!confirm('이 기록을 삭제할까요?')) return;
               await w.remove(id);
@@ -244,15 +273,62 @@ export default function App() {
         </div>
       </nav>
 
+      {/* 휴식 중엔 어느 탭에서든 아래에 작게 */}
+      {pillShown && (
+        <div className={`fixed inset-x-0 z-40 flex justify-center px-4 pointer-events-none ${typing ? 'hidden' : ''}`} style={{ bottom: 'calc(68px + env(safe-area-inset-bottom))' }}>
+          <div className="pointer-events-auto">
+            <RestPill floating />
+          </div>
+        </div>
+      )}
+
+      <ExercisePicker
+        open={overlay.kind === 'picker'}
+        initialRoutine={lastRoutine}
+        logs={w.logs}
+        custom={w.custom}
+        onClose={closeOverlay}
+        onPick={(routine, exercise) => {
+          const log = w.logs.find((l) => l.date === todayStr() && l.exercise === exercise);
+          setTarget(log ? { routine, exercise, editing: log } : { routine, exercise });
+          setOverlay({ kind: 'exercise' });
+        }}
+        onAdd={(routine) => show({ kind: 'add', routine })}
+      />
       <AddExerciseSheet
-        open={sheet.open}
-        initialRoutine={sheet.routine}
-        onClose={closeSheet}
+        open={overlay.kind === 'add'}
+        initialRoutine={lastRoutine}
+        onClose={closeOverlay}
         onSubmit={async (routine, exercise) => {
-          closeSheet();
           await w.addCustom({ routine, exercise });
-          setPending({ routine, exercise });
           setToast(`${exercise} 추가됨`);
+          setTarget({ routine, exercise });
+          setOverlay({ kind: 'exercise' });
+        }}
+      />
+      <ExerciseSheet
+        open={overlay.kind === 'exercise'}
+        target={target}
+        logs={w.logs}
+        busy={w.loading}
+        onClose={closeOverlay}
+        onDelete={async (id) => {
+          if (!confirm('이 기록을 삭제할까요?')) return;
+          await w.remove(id);
+          setToast('삭제했습니다');
+          closeOverlay();
+        }}
+        onSave={async (log, id) => {
+          try {
+            if (id && target?.editing) await w.update({ ...target.editing, ...log });
+            else await w.add(log);
+            setToast(id ? '수정했습니다' : '저장했습니다');
+            closeOverlay();
+            return true;
+          } catch (e) {
+            setToast(`저장 실패: ${(e as Error).message}`);
+            return false;
+          }
         }}
       />
       <Toast msg={toast} />

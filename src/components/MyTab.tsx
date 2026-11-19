@@ -3,8 +3,8 @@ import { ChevronRight, Share } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { pendingLocal, type CloudRepo } from '../lib/storage';
 import { errText } from '../lib/supabase';
-import { estimate1RM, setVolume } from '../lib/analysis';
-import { prettyDate, todayStr } from '../lib/date';
+import { dayStr, estimate1RM, setVolume, streakOf } from '../lib/analysis';
+import { prettyDate } from '../lib/date';
 import { ROUTINES } from '../data/exercises';
 import type { InBodyRecord } from '../lib/inbody';
 import type { CustomExercise, WorkoutLog } from '../lib/types';
@@ -29,21 +29,6 @@ interface Props {
   onEdit: (log: WorkoutLog) => void;
   onDelete: (id: string) => void;
   onOpenInBody: () => void;
-}
-
-const dayStr = (offset: number) => {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return todayStr(d);
-};
-
-function streakOf(logs: WorkoutLog[]) {
-  const days = new Set(logs.map((l) => l.date));
-  let start = days.has(dayStr(0)) ? 0 : days.has(dayStr(-1)) ? -1 : null;
-  if (start === null) return 0;
-  let n = 0;
-  while (days.has(dayStr(start - n))) n++;
-  return n;
 }
 
 function Delta({ v, unit = '', goodUp = true }: { v: number | null; unit?: string; goodUp?: boolean }) {
