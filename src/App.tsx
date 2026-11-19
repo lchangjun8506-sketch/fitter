@@ -205,6 +205,7 @@ export default function App() {
             sub={route.me}
             onSub={(me) => navigate({ ...route, me })}
             logs={w.logs}
+            custom={w.custom}
             inbody={inbody.records}
             cloud={cloud}
             toast={setToast}

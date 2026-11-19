@@ -141,11 +141,16 @@ export class CloudRepo implements Repo {
     this.ok(await this.sb.from('custom_exercises').upsert(item, { onConflict: 'user_id,routine,exercise', ignoreDuplicates: true }));
   }
   /** 이 기기 기록을 계정으로 한 번에 옮기기 */
-  async importLogs(logs: WorkoutLog[]) {
-    if (!logs.length) return;
-    this.ok(await this.sb.from('workout_logs').insert(
-      logs.map((l) => ({ date: l.date, routine: l.routine, exercise: l.exercise, sets: l.sets, memo: l.memo ?? null })),
-    ));
+  async importLogs(logs: (NewLog & { createdAt?: string })[]) {
+    // 한 번에 너무 많이 보내지 않도록 300개씩
+    for (let i = 0; i < logs.length; i += 300) {
+      this.ok(await this.sb.from('workout_logs').insert(
+        logs.slice(i, i + 300).map((l) => ({
+          date: l.date, routine: l.routine, exercise: l.exercise, sets: l.sets, memo: l.memo ?? null,
+          ...(l.createdAt && /^\d{4}-\d{2}-\d{2}T/.test(l.createdAt) ? { created_at: l.createdAt } : {}),
+        })),
+      ));
+    }
   }
 }
 

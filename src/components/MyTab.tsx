@@ -7,7 +7,8 @@ import { estimate1RM, setVolume } from '../lib/analysis';
 import { prettyDate, todayStr } from '../lib/date';
 import { ROUTINES } from '../data/exercises';
 import type { InBodyRecord } from '../lib/inbody';
-import type { WorkoutLog } from '../lib/types';
+import type { CustomExercise, WorkoutLog } from '../lib/types';
+import ImportSheet from './ImportSheet';
 import Segmented from './Segmented';
 import HistoryList from './HistoryList';
 import LoginPanel from './LoginPanel';
@@ -20,6 +21,7 @@ interface Props {
   sub: MySub;
   onSub: (s: MySub) => void;
   logs: WorkoutLog[];
+  custom: CustomExercise[];
   inbody: InBodyRecord[];
   cloud: CloudRepo | null;
   toast: (m: string) => void;
@@ -210,8 +212,9 @@ function Dashboard({ logs, inbody, onOpenInBody }: Pick<Props, 'logs' | 'inbody'
   );
 }
 
-function Account({ cloud, toast, onImported }: Pick<Props, 'cloud' | 'toast' | 'onImported'>) {
+function Account({ cloud, toast, onImported, logs, custom }: Pick<Props, 'cloud' | 'toast' | 'onImported' | 'logs' | 'custom'>) {
   const { session, handle, signOut } = useAuth();
+  const [importOpen, setImportOpen] = useState(false);
   const [editNick, setEditNick] = useState(false);
   const [localCount, setLocalCount] = useState(() => pendingLocal.logs().length);
   const [moving, setMoving] = useState(false);
@@ -261,9 +264,11 @@ function Account({ cloud, toast, onImported }: Pick<Props, 'cloud' | 'toast' | '
             </button>
           </div>
           <button onClick={() => setEditNick(true)} className="tap row w-full text-[16px]">닉네임 변경</button>
+          {cloud && <button onClick={() => setImportOpen(true)} className="tap row w-full text-[16px]">예전 기록 가져오기 (구글 시트)</button>}
           <button onClick={() => confirm('로그아웃할까요?') && signOut()} className="tap row w-full text-[16px] text-down">로그아웃</button>
         </div>
       </section>
+      {cloud && <ImportSheet open={importOpen} onClose={() => setImportOpen(false)} cloud={cloud} logs={logs} custom={custom} onDone={onImported} toast={toast} />}
     </div>
   );
 }
@@ -275,7 +280,7 @@ export default function MyTab(p: Props) {
       {p.sub === 'dash' ? (
         <>
           <Dashboard logs={p.logs} inbody={p.inbody} onOpenInBody={p.onOpenInBody} />
-          <Account cloud={p.cloud} toast={p.toast} onImported={p.onImported} />
+          <Account cloud={p.cloud} toast={p.toast} onImported={p.onImported} logs={p.logs} custom={p.custom} />
         </>
       ) : (
         <HistoryList logs={p.logs} onEdit={p.onEdit} onDelete={p.onDelete} />
