@@ -9,6 +9,7 @@ interface AuthState {
   ready: boolean;            // 세션 확인 끝
   session: Session | null;
   handle: string | null;     // 닉네임-0000, 아직 없으면 null
+  canImport: boolean;        // 예전 기록 가져오기 메뉴 허용 (DB에서 계정별로 지정)
   signIn: (p: Provider) => Promise<void>;
   signOut: () => Promise<void>;
   claimNickname: (nick: string) => Promise<string>;
@@ -19,12 +20,24 @@ const Ctx = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [handle, setHandle] = useState<string | null>(null);
+  const [canImport, setCanImport] = useState(false);
   const [ready, setReady] = useState(!supabase);
 
   const loadHandle = useCallback(async (s: Session | null) => {
-    if (!supabase || !s) return setHandle(null);
+    if (!supabase || !s) {
+      setCanImport(false);
+      return setHandle(null);
+    }
+    const full = await supabase.from('profiles').select('handle, can_import').eq('id', s.user.id).maybeSingle();
+    if (!full.error) {
+      setHandle(full.data?.handle ?? null);
+      setCanImport(!!full.data?.can_import);
+      return;
+    }
+    // 0004 SQL을 아직 안 돌린 DB(열 없음)에서도 로그인은 정상으로
     const { data } = await supabase.from('profiles').select('handle').eq('id', s.user.id).maybeSingle();
     setHandle(data?.handle ?? null);
+    setCanImport(false);
   }, []);
 
   useEffect(() => {
@@ -60,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase?.auth.signOut();
     setHandle(null);
+    setCanImport(false);
   };
 
   const claimNickname = async (nick: string) => {
@@ -71,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ enabled: !!supabase, ready, session, handle, signIn, signOut, claimNickname }}>
+    <Ctx.Provider value={{ enabled: !!supabase, ready, session, handle, canImport, signIn, signOut, claimNickname }}>
       {children}
     </Ctx.Provider>
   );

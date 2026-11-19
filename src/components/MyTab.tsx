@@ -213,7 +213,7 @@ function Dashboard({ logs, inbody, onOpenInBody }: Pick<Props, 'logs' | 'inbody'
 }
 
 function Account({ cloud, toast, onImported, logs, custom }: Pick<Props, 'cloud' | 'toast' | 'onImported' | 'logs' | 'custom'>) {
-  const { session, handle, signOut } = useAuth();
+  const { session, handle, canImport, signOut } = useAuth();
   const [importOpen, setImportOpen] = useState(false);
   const [editNick, setEditNick] = useState(false);
   const [localCount, setLocalCount] = useState(() => pendingLocal.logs().length);
@@ -264,11 +264,11 @@ function Account({ cloud, toast, onImported, logs, custom }: Pick<Props, 'cloud'
             </button>
           </div>
           <button onClick={() => setEditNick(true)} className="tap row w-full text-[16px]">닉네임 변경</button>
-          {cloud && <button onClick={() => setImportOpen(true)} className="tap row w-full text-[16px]">예전 기록 가져오기 (구글 시트)</button>}
+          {cloud && canImport && <button onClick={() => setImportOpen(true)} className="tap row w-full text-[16px]">예전 기록 가져오기 (구글 시트)</button>}
           <button onClick={() => confirm('로그아웃할까요?') && signOut()} className="tap row w-full text-[16px] text-down">로그아웃</button>
         </div>
       </section>
-      {cloud && <ImportSheet open={importOpen} onClose={() => setImportOpen(false)} cloud={cloud} logs={logs} custom={custom} onDone={onImported} toast={toast} />}
+      {cloud && canImport && <ImportSheet open={importOpen} onClose={() => setImportOpen(false)} cloud={cloud} logs={logs} custom={custom} onDone={onImported} toast={toast} />}
     </div>
   );
 }

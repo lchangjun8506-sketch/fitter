@@ -15,6 +15,7 @@
    - `supabase/migrations/0002_grants.sql`: 앱이 표에 접근할 권한
      (빠뜨리면 로그인 후 "permission denied for table ..." 오류가 나요)
    - `supabase/migrations/0003_ai_usage.sql`: AI 루틴 추천 하루 사용 횟수 기록용 표
+   - `supabase/migrations/0004_import_flag.sql`: "예전 기록 가져오기" 메뉴를 쓸 계정 지정 (파일 안의 `여기에-내아이디`를 내 아이디로 바꿔서 실행)
 3. 두 값을 복사해 둡니다.
    - **Project URL** (`https://xxxx.supabase.co`): 화면 위쪽 **Connect** 버튼, 또는 Project Settings → **Data API** → `VITE_SUPABASE_URL`
    - **Publishable key** (`sb_publishable_...`): Project Settings → **API Keys** → `VITE_SUPABASE_ANON_KEY`
