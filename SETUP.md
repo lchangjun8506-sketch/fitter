@@ -31,16 +31,35 @@
 
 ## 2. 카카오 로그인 (약 15분, 무료)
 
-1. https://developers.kakao.com → 내 애플리케이션 → **애플리케이션 추가하기**
-2. **앱 키**의 **REST API 키** 복사
-3. **카카오 로그인** → 활성화 ON → **Redirect URI**에 위 콜백 주소 등록
-4. **카카오 로그인 → 보안** → Client Secret 코드 생성 → 활성화 → 코드 복사
-5. **카카오 로그인 → 동의항목**: 닉네임·프로필 사진을 "필수" 또는 "선택"으로
-   - 이메일(account_email)은 비즈 앱 전환 전엔 못 받을 수 있어요.
-6. **플랫폼 → Web** 에 Vercel 주소 등록
-7. Supabase → Authentication → Providers → **Kakao** 켜기
-   - REST API Key(Client ID)와 Client Secret 붙여넣기
-   - 이메일을 못 받는 경우 **Allow users without an email** 을 켜 주세요.
+**먼저 Supabase에서 콜백 주소 복사**
+- Supabase → Authentication → Sign In / Providers → **Kakao**를 열면 **Callback URL**이 보여요.
+- 형태는 `https://<프로젝트ID>.supabase.co/auth/v1/callback` 이에요.
+
+**카카오 개발자 사이트 (https://developers.kakao.com, 카카오 계정으로 로그인)**
+1. **내 애플리케이션 → 애플리케이션 추가하기**
+   - 앱 이름 `FITTER`, 회사명은 본인 이름
+2. **앱 키**에서 **REST API 키** 복사
+   - Supabase의 *Client ID* 칸에 들어가요.
+3. **카카오 로그인** 메뉴
+   - 사용 설정 **ON**
+   - **Redirect URI**에 Supabase에서 복사한 콜백 주소 등록
+4. **카카오 로그인 → 보안**
+   - Client Secret **코드 생성** → 상태 **사용함**
+   - 코드 복사 → Supabase의 *Client Secret* 칸에 들어가요.
+5. **비즈 앱 전환 (개인도 무료로 가능)**
+   - Supabase는 로그인할 때 카카오에 이메일을 항상 요청해요.
+   - 이메일 항목은 비즈 앱에서만 열려서, 전환하지 않으면 로그인 시 `KOE205` 오류가 나요.
+   - 앱 설정 → **비즈니스** → **개인 개발자 비즈 앱 전환** (사업자 등록 필요 없음. 앱 아이콘 등록을 요구하면 `public/pwa-512.png`를 올리세요)
+6. **카카오 로그인 → 동의항목**
+   - 닉네임: **필수 동의**
+   - 프로필 사진: **선택 동의**
+   - 카카오계정(이메일): **선택 동의**
+7. **플랫폼 → Web → 사이트 도메인**에 Vercel 주소 등록 (예: `https://fitter-xxxx.vercel.app`)
+
+**다시 Supabase → Kakao**
+- *Enable* 켜기 → Client ID(REST API 키)·Client Secret 붙여넣기
+- **Allow users without an email** 켜기 (이메일 제공을 거부한 사람도 로그인되게)
+- **Save**
 
 ## 3. 구글 로그인 (약 15분, 무료)
 
