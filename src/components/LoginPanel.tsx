@@ -27,22 +27,13 @@ const BUTTONS: { id: Provider; label: string; cls: string; logo: JSX.Element }[]
   },
 ];
 
-export default function LoginPanel({ reason }: { reason: string }) {
-  const { enabled, signIn } = useAuth();
+/** 카카오·구글 로그인 버튼 묶음 (시작 화면과 화면 안 로그인 안내에서 같이 씀) */
+export function LoginButtons() {
+  const { signIn } = useAuth();
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<Provider | null>(null);
-
-  if (!enabled) {
-    return (
-      <div className="group-card px-4 py-5 text-[15px] text-sub leading-relaxed">
-        서버가 아직 연결되지 않았어요. 관리자가 Supabase 설정을 마치면 로그인할 수 있어요.
-      </div>
-    );
-  }
-
   return (
-    <section className="space-y-3">
-      <p className="px-1 text-[15px] text-sub leading-relaxed">{reason}</p>
+    <>
       {BUTTONS.map((b) => (
         <button
           key={b.id}
@@ -57,14 +48,30 @@ export default function LoginPanel({ reason }: { reason: string }) {
               setBusy(null);
             }
           }}
-          className={`tap w-full h-[52px] rounded-[12px] flex items-center justify-center gap-2 text-[16px] font-semibold disabled:opacity-60 ${b.cls}`}
+          className={`tap w-full h-[54px] rounded-[14px] flex items-center justify-center gap-2 text-[16px] font-semibold disabled:opacity-60 ${b.cls}`}
         >
           {b.logo}
           {busy === b.id ? '이동 중…' : b.label}
         </button>
       ))}
-      {err && <p role="alert" className="px-1 text-[14px] text-down">{err}</p>}
-      <p className="px-1 text-[12px] text-sub">로그인하면 운동 기록이 서버에 안전하게 저장되고, 휴대폰을 바꿔도 이어서 쓸 수 있어요.</p>
+      {err && <p role="alert" className="px-1 text-center text-[14px] text-down">{err}</p>}
+    </>
+  );
+}
+
+export default function LoginPanel({ reason }: { reason: string }) {
+  const { enabled } = useAuth();
+  if (!enabled) {
+    return (
+      <div className="group-card px-4 py-5 text-[15px] text-sub leading-relaxed">
+        서버가 아직 연결되지 않았어요. 관리자가 Supabase 설정을 마치면 로그인할 수 있어요.
+      </div>
+    );
+  }
+  return (
+    <section className="space-y-3">
+      <p className="px-1 text-[15px] text-sub leading-relaxed">{reason}</p>
+      <LoginButtons />
     </section>
   );
 }

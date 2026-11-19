@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChartNoAxesColumn, CircleUserRound, Dumbbell, Loader2, Swords } from 'lucide-react';
 import { useWorkout } from './lib/useWorkout';
 import { useAuth } from './lib/auth';
@@ -14,7 +14,7 @@ import RestTimer from './components/RestTimer';
 import LogForm from './components/LogForm';
 import AddExerciseSheet from './components/AddExerciseSheet';
 import Toast from './components/Toast';
-import Splash from './components/Splash';
+import Gate from './components/Gate';
 import type { Routine, WorkoutLog } from './lib/types';
 
 type Tab = 'log' | 'battle' | 'stats' | 'me';
@@ -111,6 +111,21 @@ export default function App() {
     else setSheet((s) => ({ ...s, open: false }));
   };
 
+  // 관문(시작·로그인 화면)이 덮고 있는 동안 앱은 포커스·스크린리더에서도 막음
+  const appRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    appRef.current?.toggleAttribute('inert', !ready);
+  }, [ready]);
+  const onGateChange = useCallback((open: boolean) => {
+    setReady(open);
+    // 로그아웃 후 다시 로그인하면 기록 탭부터
+    if (!open && auth.ready && !auth.session) {
+      history.replaceState(null, '', location.pathname + location.search);
+      setRoute(parseHash(''));
+      setEditing(null);
+    }
+  }, [auth.ready, auth.session]);
+
   const todayCount = useMemo(() => w.logs.filter((l) => l.date === todayStr()).length, [w.logs]);
 
   const navigate = (next: Route) => {
@@ -123,8 +138,8 @@ export default function App() {
 
   return (
     <>
-    <Splash onDone={() => setReady(true)} />
-    <div className="min-h-[100dvh] pb-[calc(88px+env(safe-area-inset-bottom))]">
+    <Gate onOpenChange={onGateChange} />
+    <div ref={appRef} className="min-h-[100dvh] pb-[calc(88px+env(safe-area-inset-bottom))]">
       <div className={ready ? 'app-enter' : 'opacity-0'}>
       <header className="max-w-md mx-auto px-5 pt-[max(env(safe-area-inset-top),20px)] pb-5">
         <div className="flex items-center gap-2 h-5">

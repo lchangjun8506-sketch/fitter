@@ -120,7 +120,7 @@ export default function RestTimer() {
               onClick={() => start(p)}
               className={`tap h-11 min-w-[44px] px-2.5 rounded-[8px] num text-[17px] transition-colors ${total === p && running ? 'bg-seg shadow-sm' : ''}`}
             >
-              {p < 120 ? p : '2:00'}
+              {p}
             </button>
           ))}
         </div>

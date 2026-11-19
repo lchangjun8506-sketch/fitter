@@ -86,3 +86,30 @@ input[type='date']::-webkit-calendar-picker-indicator { opacity: .45; }
 /* 고정 요소(탭 바)는 transform 없이 투명도만: transform이 남으면 position:fixed 기준이 바뀜 */
 .app-fade { animation: app-fade 500ms ease-out both; }
 @keyframes app-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── 시작 화면 겸 로그인 관문 ── */
+.gate { transition: opacity 450ms cubic-bezier(0.25, 0.1, 0.25, 1); }
+.gate-leaving { opacity: 0; pointer-events: none; }
+.gate-mark {
+  position: absolute; left: 50%; top: 50%;
+  font-family: Anton, sans-serif; font-size: 96px; line-height: 0.86; letter-spacing: 0.01em;
+  transform: translate(-50%, -50%);
+  transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gate-tag { position: absolute; right: -3rem; top: -1.25rem; width: 2.25rem; height: 14px; border-radius: 2px; background: #DA2E22; transform-origin: left; }
+/* 로그인 단계: 같은 글자가 위로 올라가며 작아짐 */
+.gate-signin .gate-mark { transform: translate(-50%, calc(-50% - 24dvh)) scale(0.62); }
+.gate-auth {
+  position: absolute; left: 24px; right: 24px; max-width: 420px; margin: 0 auto;
+  bottom: max(env(safe-area-inset-bottom), 32px);
+  display: flex; flex-direction: column; gap: 12px; pointer-events: none;
+}
+.gate-auth > * { opacity: 0; transform: translateY(24px); transition: opacity 450ms ease, transform 600ms cubic-bezier(0.22, 1, 0.36, 1); }
+.gate-signin .gate-auth { pointer-events: auto; }
+.gate-signin .gate-auth > * { opacity: 1; transform: none; }
+.gate-signin .gate-auth > :nth-child(1) { transition-delay: 250ms; }
+.gate-signin .gate-auth > :nth-child(2) { transition-delay: 330ms; }
+.gate-signin .gate-auth > :nth-child(3) { transition-delay: 410ms; }
+.gate-signin .gate-auth > :nth-child(n+4) { transition-delay: 490ms; }
+/* 같은 세션 새로고침: 움직임 없이 바로 배치 */
+.gate-instant .gate-mark, .gate-instant .gate-auth > * { transition: none !important; animation: none !important; }
