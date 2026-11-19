@@ -42,7 +42,7 @@ export default function RestTimer() {
       <div className="flex items-center gap-4 px-4 py-3">
         <div className="flex-1 min-w-0">
           <div className="caption">{done ? '휴식 끝' : running ? '휴식 중' : '휴식 타이머'}</div>
-          <div className={`num text-[40px] leading-none mt-1 ${running || done ? 'text-ink' : 'text-sub/60'}`} aria-live="off">
+          <div className={`num text-[40px] leading-none mt-1 ${done ? 'text-accent' : running ? 'text-ink' : 'text-sub/60'}`} aria-live="off">
             {mm}:{ss}
           </div>
         </div>
@@ -61,7 +61,7 @@ export default function RestTimer() {
           <RotateCcw aria-hidden className="w-5 h-5" strokeWidth={1.75} />
         </button>
       </div>
-      <div className="absolute left-0 bottom-0 h-[2px] bg-ink transition-[width] duration-1000 ease-linear" style={{ width: `${pct}%` }} />
+      <div className="absolute left-0 bottom-0 h-[3px] bg-accent transition-[width] duration-1000 ease-linear" style={{ width: `${pct}%` }} />
     </section>
   );
 }

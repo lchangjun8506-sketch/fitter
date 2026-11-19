@@ -49,11 +49,13 @@ export default function Splash({ onDone }: { onDone: () => void }) {
     <div
       onClick={() => setPhase('out')}
       aria-hidden
-      className={`fixed inset-0 z-[100] grid place-items-center bg-[#111] transition-opacity duration-[450ms] ease-apple ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}
+      className={`fixed inset-0 z-[100] grid place-items-center bg-[#F2ECDF] transition-opacity duration-[450ms] ease-apple ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}
     >
-      <span className={`splash-mark font-display font-bold text-[#F2F2F0] text-[44px] leading-none ${phase === 'wait' ? 'opacity-0' : 'splash-in'}`}>
-        FITTER
-      </span>
+      <div className={`relative font-display text-[#141414] text-[96px] leading-[0.86] ${phase === 'wait' ? 'opacity-0' : 'splash-in'}`}>
+        <span className={`absolute -right-12 -top-5 w-9 h-[14px] rounded-[2px] bg-[#DA2E22] ${phase === 'wait' ? 'scale-x-0' : 'splash-tag'}`} />
+        <div>FIT</div>
+        <div>TER</div>
+      </div>
     </div>
   );
 }

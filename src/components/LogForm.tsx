@@ -178,7 +178,7 @@ export default function LogForm({ logs, custom, editing, busy, onSave, onCancelE
           </button>
         </div>
         {tip && (
-          <p className="mt-4 px-4 border-l-2 border-ink/80 text-[14px] leading-relaxed">
+          <p className="mt-4 px-4 border-l-[3px] border-accent text-[14px] leading-relaxed">
             <span className={`font-semibold ${tip.tone === 'warn' ? 'text-down' : ''}`}>{tip.title}</span>
             <span className="text-sub"> · {tip.desc}</span>
           </p>
@@ -267,7 +267,7 @@ export default function LogForm({ logs, custom, editing, busy, onSave, onCancelE
       <button
         onClick={submit}
         disabled={!sets.length || busy}
-        className="tap w-full h-[54px] rounded-[14px] bg-ink text-onink text-[17px] font-semibold disabled:opacity-30"
+        className="tap w-full h-[54px] rounded-[14px] bg-accent text-onaccent text-[17px] font-semibold disabled:opacity-30"
       >
         {editing ? '수정 완료' : '저장'}
       </button>

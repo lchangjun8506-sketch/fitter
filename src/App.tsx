@@ -124,7 +124,7 @@ export default function App() {
                 key={id}
                 onClick={() => go(id)}
                 aria-current={on ? 'page' : undefined}
-                className={`tap flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors duration-200 ${on ? 'text-ink' : 'text-sub'}`}
+                className={`tap flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors duration-200 ${on ? 'text-accent' : 'text-sub'}`}
               >
                 <Icon aria-hidden className="w-6 h-6" strokeWidth={on ? 2.25 : 1.75} />
                 {label}

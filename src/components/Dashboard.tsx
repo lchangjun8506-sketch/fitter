@@ -18,7 +18,7 @@ function Spark({ values, label }: { values: number[]; label: string }) {
   const span = max - min || 1;
   const pts = values.map((v, i) => `${(i / (values.length - 1)) * 100},${26 - ((v - min) / span) * 22}`).join(' ');
   return (
-    <svg role="img" aria-label={label} viewBox="0 0 100 28" preserveAspectRatio="none" className="w-20 h-7 text-ink">
+    <svg role="img" aria-label={label} viewBox="0 0 100 28" preserveAspectRatio="none" className="w-20 h-7 text-accent">
       <polyline points={pts} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );
@@ -62,7 +62,7 @@ export default function Dashboard({ logs }: { logs: WorkoutLog[] }) {
           <div className="flex gap-1.5">
             {days.map((d, i) => (
               <div key={i} className="flex flex-col items-center gap-1.5">
-                <span className={`w-6 h-10 rounded-[6px] ${d.on ? 'bg-ink' : 'bg-fill'}`} />
+                <span className={`w-6 h-10 rounded-[6px] ${d.on ? 'bg-accent' : 'bg-fill'}`} />
                 <span className={`text-[11px] font-medium ${i === 6 ? 'text-ink' : 'text-sub'}`}>{d.label}</span>
               </div>
             ))}
