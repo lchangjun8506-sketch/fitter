@@ -26,7 +26,7 @@ export default function MeTab({ toast, cloud, onImported }: { toast: (m: string)
         <div className="row justify-between py-3">
           <div className="min-w-0">
             <div className="text-[22px] font-bold truncate">{handle}</div>
-            <div className="text-[13px] text-sub">{{ kakao: '카카오', google: 'Google', apple: 'Apple' }[provider ?? ''] ?? ''} 계정으로 로그인됨</div>
+            <div className="text-[13px] text-sub">{{ kakao: '카카오', google: 'Google' }[provider ?? ''] ?? ''} 계정으로 로그인됨</div>
           </div>
           <button onClick={() => shareHandle(handle, toast)} aria-label="아이디 공유" className="tap w-11 h-11 -mr-2 grid place-items-center text-accent">
             <Share aria-hidden className="w-5 h-5" strokeWidth={1.75} />

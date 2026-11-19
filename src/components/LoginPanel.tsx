@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth, type Provider } from '../lib/auth';
 import { errText } from '../lib/supabase';
 
-/** 각 회사 로고 가이드에 맞춘 버튼 색 (카카오 노랑, 애플 검정, 구글 흰색) */
+/** 각 회사 로고 가이드에 맞춘 버튼 색 (카카오 노랑, 구글 흰색) */
 const BUTTONS: { id: Provider; label: string; cls: string; logo: JSX.Element }[] = [
   {
     id: 'kakao',
@@ -23,14 +23,6 @@ const BUTTONS: { id: Provider; label: string; cls: string; logo: JSX.Element }[]
         <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" />
       </svg>
-    ),
-  },
-  {
-    id: 'apple',
-    label: 'Apple로 계속하기',
-    cls: 'bg-black text-white dark:bg-white dark:text-black',
-    logo: (
-      <svg aria-hidden viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M16.37 12.53c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.19-1.73-1.36-.14-2.65.8-3.34.8-.69 0-1.75-.78-2.88-.76-1.48.02-2.85.86-3.61 2.19-1.54 2.67-.39 6.62 1.11 8.79.73 1.06 1.6 2.25 2.75 2.2 1.1-.04 1.52-.71 2.85-.71 1.33 0 1.71.71 2.88.69 1.19-.02 1.94-1.08 2.67-2.15.84-1.23 1.19-2.42 1.21-2.48-.03-.01-2.32-.89-2.33-3.53zM14.18 6.06c.61-.74 1.02-1.76.91-2.78-.88.04-1.94.59-2.57 1.32-.56.65-1.06 1.69-.93 2.69.98.08 1.98-.5 2.59-1.23z" /></svg>
     ),
   },
 ];

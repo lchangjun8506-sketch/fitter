@@ -1,7 +1,7 @@
 # 서버 연결 가이드 (로그인 · 대결 · 인바디)
 
 이 설정을 하기 전에도 앱은 동작합니다(기록이 휴대폰 안에만 저장됨).
-아래 순서대로 하면 로그인·친구 대결·인바디 판독이 켜집니다. 처음이면 1~2시간 정도 걸려요.
+아래 순서대로 하면 로그인·친구 대결·인바디 판독이 켜집니다. 처음이면 1시간 정도 걸려요. 로그인은 카카오·구글 두 가지만 지원해요.
 
 ---
 
@@ -48,21 +48,9 @@
 4. 클라이언트 ID / 보안 비밀을 Supabase → Providers → **Google**에 붙여넣고 켜기
 5. 동의 화면이 "테스트" 상태면 등록한 테스트 사용자만 로그인돼요. 공개하려면 **앱 게시**를 누르세요.
 
-## 4. 애플 로그인 (약 30분, Apple Developer Program 가입 필요 · 연 129,000원)
-
-1. https://developer.apple.com/account → Certificates, IDs & Profiles
-2. **Identifiers → App IDs** 하나 만들고 *Sign in with Apple* 체크
-3. **Identifiers → Services IDs** 만들기 (예: `app.fitter.web`)
-   - Sign in with Apple 설정에서 Domains에 `<프로젝트ID>.supabase.co`
-   - Return URLs에 위 콜백 주소
-4. **Keys** → 새 키 만들고 Sign in with Apple 체크 → `.p8` 파일 다운로드 (한 번만 받을 수 있어요)
-5. Supabase → Providers → **Apple**에 Services ID(Client ID), Team ID, Key ID, `.p8` 내용 입력
-   - Supabase 화면 안내에 따라 시크릿을 생성하세요.
-   - 이 시크릿은 **6개월마다 다시 만들어야** 해요. 달력에 적어 두세요.
-
 ---
 
-## 5. Claude API 키 (인바디 판독용)
+## 4. Claude API 키 (인바디 판독용)
 
 1. https://console.anthropic.com → API Keys → **Create Key**
 2. Billing에서 결제 수단 등록 (선불 크레딧 충전 방식)
@@ -71,7 +59,7 @@
 
 ---
 
-## 6. Vercel 환경 변수 넣고 다시 배포
+## 5. Vercel 환경 변수 넣고 다시 배포
 
 Vercel → 프로젝트 → **Settings → Environment Variables** 에 추가:
 
@@ -79,7 +67,7 @@ Vercel → 프로젝트 → **Settings → Environment Variables** 에 추가:
 |---|---|---|
 | `VITE_SUPABASE_URL` | 1-3의 Project URL | 앱·서버 공용 |
 | `VITE_SUPABASE_ANON_KEY` | 1-3의 anon 키 | 공개돼도 되는 키 (권한은 DB 규칙이 막음) |
-| `ANTHROPIC_API_KEY` | 5의 키 | **서버 전용. 절대 `VITE_`를 붙이지 마세요** (앱에 노출됨) |
+| `ANTHROPIC_API_KEY` | 4의 키 | **서버 전용. 절대 `VITE_`를 붙이지 마세요** (앱에 노출됨) |
 
 저장 후 **Deployments → 최신 배포 → Redeploy** 하면 적용됩니다.
 

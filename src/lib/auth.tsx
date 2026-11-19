@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 
-export type Provider = 'kakao' | 'google' | 'apple';
+export type Provider = 'kakao' | 'google';
 
 interface AuthState {
   enabled: boolean;          // Supabase 설정 여부
