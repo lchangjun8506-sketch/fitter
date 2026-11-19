@@ -48,8 +48,8 @@ export function coachingTip(history: WorkoutLog[]): Tip | null {
   const w = topWeight(last.sets);
   const r = topReps(last.sets);
   if (r >= 12)
-    return { tone: 'up', title: '증량 타이밍이에요', desc: `지난번 ${w}kg × ${r}회 성공. 이번엔 +2.5kg 가보자고 🔥` };
+    return { tone: 'up', title: '증량할 차례입니다', desc: `지난 기록 ${w}kg × ${r}회. 이번에는 ${w + 2.5}kg로 시작해 보세요.` };
   if (progressStatus(history) === 'stall')
-    return { tone: 'warn', title: '3회 연속 같은 무게', desc: '횟수 +2회 또는 드롭세트로 자극을 바꿔보세요.' };
-  return { tone: 'keep', title: '과부하 진행 중', desc: `지난 기록 ${w}kg × ${r}회. 같은 무게로 +1~2회 목표!` };
+    return { tone: 'warn', title: '3회 연속 같은 무게', desc: '횟수를 2회 늘리거나 마지막 세트에 드롭세트를 더해 보세요.' };
+  return { tone: 'keep', title: '같은 무게, 1~2회 더', desc: `지난 기록 ${w}kg × ${r}회.` };
 }

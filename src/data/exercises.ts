@@ -2,11 +2,11 @@ import type { Routine } from '../lib/types';
 
 export const ROUTINES: Routine[] = ['가슴·삼두', '등·이두', '어깨', '하체'];
 
-export const ROUTINE_META: Record<Routine, { short: string; emoji: string }> = {
-  '가슴·삼두': { short: '가슴', emoji: '🫀' },
-  '등·이두': { short: '등', emoji: '🦍' },
-  '어깨': { short: '어깨', emoji: '🥥' },
-  '하체': { short: '하체', emoji: '🦵' },
+export const ROUTINE_META: Record<Routine, { short: string; en: string }> = {
+  '가슴·삼두': { short: '가슴·삼두', en: 'CHEST' },
+  '등·이두': { short: '등·이두', en: 'BACK' },
+  '어깨': { short: '어깨', en: 'SHOULDER' },
+  '하체': { short: '하체', en: 'LEGS' },
 };
 
 export const ROUTINE_EXERCISES: Record<Routine, string[]> = {

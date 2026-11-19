@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart3, CalendarDays, Dumbbell, Loader2 } from 'lucide-react';
+import { ChartNoAxesColumn, Dumbbell, ListOrdered, Loader2 } from 'lucide-react';
 import { useWorkout } from './lib/useWorkout';
 import { todayStr } from './lib/date';
 import RestTimer from './components/RestTimer';
@@ -13,10 +13,15 @@ import type { CustomExercise, Routine, WorkoutLog } from './lib/types';
 type Tab = 'log' | 'history' | 'stats';
 const TABS: { id: Tab; label: string; Icon: typeof Dumbbell }[] = [
   { id: 'log', label: '기록', Icon: Dumbbell },
-  { id: 'history', label: '히스토리', Icon: CalendarDays },
-  { id: 'stats', label: '성장', Icon: BarChart3 },
+  { id: 'history', label: '히스토리', Icon: ListOrdered },
+  { id: 'stats', label: '분석', Icon: ChartNoAxesColumn },
 ];
-const TITLES: Record<Tab, string> = { log: '오늘도 한 세트 더 💪', history: '운동 히스토리', stats: '나의 성장' };
+const TITLES: Record<Tab, string> = { log: '오늘의 운동', history: '히스토리', stats: '분석' };
+const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+const todayLabel = () => {
+  const d = new Date();
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WEEK[d.getDay()]}요일`;
+};
 
 export default function App() {
   const w = useWorkout();
@@ -40,30 +45,31 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen pb-28">
-      <header className="sticky top-0 z-40 bg-bg/80 backdrop-blur-xl">
-        <div className="max-w-md mx-auto px-4 pt-[max(env(safe-area-inset-top),14px)] pb-3 flex items-center justify-between">
-          <div>
-            <div className="text-[11px] font-black tracking-[0.25em] text-lime">FITTER</div>
-            <h1 className="text-[22px] font-black leading-tight">{TITLES[tab]}</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            {w.loading && <Loader2 className="w-5 h-5 animate-spin text-lime" />}
-            <div className="px-3 py-1.5 rounded-full bg-surface border border-line text-xs font-bold">
-              오늘 <span className="text-lime">{todayCount}</span>종목
-            </div>
-          </div>
+    <div className="min-h-screen pb-[calc(88px+env(safe-area-inset-bottom))]">
+      <header className="max-w-md mx-auto px-5 pt-[max(env(safe-area-inset-top),16px)] pb-5">
+        <div className="flex items-center justify-between h-8">
+          <span className="font-display text-[19px] font-bold tracking-[0.18em]">FITTER</span>
+          {w.loading && <Loader2 aria-label="불러오는 중" className="w-[18px] h-[18px] animate-spin text-sub" />}
+        </div>
+        <p className="caption mt-5">{tab === 'log' ? todayLabel() : `총 ${w.logs.length}개 기록`}</p>
+        <div className="flex items-end justify-between">
+          <h1 className="text-[34px] font-bold leading-tight tracking-[-0.02em]">{TITLES[tab]}</h1>
+          {tab === 'log' && (
+            <p className="caption pb-1.5">
+              오늘 <span className="num text-ink text-[17px]">{todayCount}</span> 종목
+            </p>
+          )}
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 space-y-3">
+      <main className="max-w-md mx-auto px-4 space-y-6">
         {w.error && (
-          <div className="rounded-2xl border border-coral/40 bg-coral/10 p-3 text-xs font-semibold text-coral">
+          <div role="alert" className="group-card px-4 py-3 text-[15px] text-down">
             데이터를 불러오지 못했어요: {w.error}
           </div>
         )}
 
-        <div className={tab === 'log' ? 'space-y-3' : 'hidden'}>
+        <div className={tab === 'log' ? 'space-y-6' : 'hidden'}>
           <RestTimer />
           <LogForm
             logs={w.logs}
@@ -77,7 +83,7 @@ export default function App() {
               try {
                 if (id && editing) await w.update({ ...editing, ...log });
                 else await w.add(log);
-                setToast(id ? '수정 완료!' : '기록 완료! 오늘도 성장 중 🔥');
+                setToast(id ? '수정했습니다' : '저장했습니다');
                 setEditing(null);
               } catch (e) {
                 setToast(`저장 실패: ${(e as Error).message}`);
@@ -96,7 +102,7 @@ export default function App() {
             onDelete={async (id) => {
               if (!confirm('이 기록을 삭제할까요?')) return;
               await w.remove(id);
-              setToast('삭제했어요');
+              setToast('삭제했습니다');
             }}
           />
         )}
@@ -104,19 +110,18 @@ export default function App() {
         {tab === 'stats' && <Dashboard logs={w.logs} />}
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 z-50 pb-[max(env(safe-area-inset-bottom),12px)] px-4 pointer-events-none">
-        <div className="pointer-events-auto max-w-md mx-auto h-16 rounded-full bg-surface/90 backdrop-blur-xl border border-line grid grid-cols-3 p-1.5 shadow-[0_10px_40px_rgba(0,0,0,.6)]">
+      <nav aria-label="주 메뉴" className="fixed bottom-0 inset-x-0 z-50 bg-bg/85 backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_var(--sep)] pb-[env(safe-area-inset-bottom)]">
+        <div className="max-w-md mx-auto grid grid-cols-3 h-[56px]">
           {TABS.map(({ id, label, Icon }) => {
             const on = tab === id;
             return (
               <button
                 key={id}
                 onClick={() => go(id)}
-                className={`press rounded-full flex items-center justify-center gap-1.5 text-sm font-extrabold transition-colors ${
-                  on ? 'bg-lime text-black' : 'text-white/50'
-                }`}
+                aria-current={on ? 'page' : undefined}
+                className={`tap flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors duration-200 ${on ? 'text-ink' : 'text-sub'}`}
               >
-                <Icon className="w-[18px] h-[18px]" strokeWidth={2.5} />
+                <Icon aria-hidden className="w-6 h-6" strokeWidth={on ? 2.25 : 1.75} />
                 {label}
               </button>
             );
@@ -132,7 +137,7 @@ export default function App() {
           setSheet((s) => ({ ...s, open: false }));
           await w.addCustom({ routine, exercise });
           setPending({ routine, exercise });
-          setToast(`'${exercise}' 추가 완료`);
+          setToast(`${exercise} 추가됨`);
         }}
       />
       <Toast msg={toast} />

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { MessageCircle, Pencil, Search, Trash2 } from 'lucide-react';
-import { ROUTINE_META } from '../data/exercises';
+import { Pencil, Search, Trash2 } from 'lucide-react';
 import { prettyDate } from '../lib/date';
 import { setVolume } from '../lib/analysis';
 import type { WorkoutLog } from '../lib/types';
@@ -25,66 +24,56 @@ export default function HistoryList({ logs, onEdit, onDelete }: Props) {
   }, [logs, q]);
 
   return (
-    <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-mute" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="종목, 루틴, 날짜, 메모 검색" className="field w-full pl-11 pr-4 h-12 text-sm" />
-      </div>
+    <div className="space-y-6">
+      <label className="flex items-center gap-2 h-11 px-3 rounded-[12px] bg-fill">
+        <Search aria-hidden className="w-[18px] h-[18px] text-sub" strokeWidth={2} />
+        <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="기록 검색" placeholder="검색"
+          className="flex-1 bg-transparent text-[16px] placeholder:text-sub focus:outline-none" />
+      </label>
 
       {groups.length === 0 && (
-        <div className="card p-10 text-center">
-          <div className="text-4xl">🏋️</div>
-          <p className="mt-3 text-sm text-mute font-semibold">{q ? '검색 결과가 없어요' : '아직 기록이 없어요. 첫 세트를 찍어볼까요?'}</p>
-        </div>
+        <p className="py-16 text-center text-[15px] text-sub">{q ? '검색 결과가 없습니다.' : '아직 기록이 없습니다.'}</p>
       )}
 
       {groups.map(([date, items]) => (
-        <div key={date} className="space-y-2">
-          <div className="flex items-baseline justify-between px-1">
-            <h3 className="text-sm font-extrabold">{prettyDate(date)}</h3>
-            <span className="text-[11px] text-mute font-semibold tabular-nums">
-              {items.reduce((a, l) => a + setVolume(l.sets), 0).toLocaleString()} kg
-            </span>
+        <section key={date}>
+          <div className="flex items-baseline justify-between px-4 pb-2">
+            <h2 className="text-[13px] font-semibold text-sub">{prettyDate(date)}</h2>
+            <span className="num text-[15px] text-sub">{items.reduce((a, l) => a + setVolume(l.sets), 0).toLocaleString()} KG</span>
           </div>
-          {items.map((log) => (
-            <article key={log.id} className="card p-4 space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <span className="text-[11px] font-bold text-lime">
-                    {ROUTINE_META[log.routine]?.emoji} {log.routine}
-                  </span>
-                  <h4 className="text-base font-extrabold truncate">{log.exercise}</h4>
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <button onClick={() => onEdit(log)} aria-label="수정" className="press w-9 h-9 grid place-items-center rounded-xl bg-raised text-white/60">
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => onDelete(log.id)} aria-label="삭제" className="press w-9 h-9 grid place-items-center rounded-xl bg-raised text-white/60 hover:text-coral">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {log.sets.map((s, i) => (
-                  <span key={i} className="px-2.5 py-1 rounded-lg bg-raised text-xs font-bold tabular-nums">
-                    <span className="text-mute mr-1">{i + 1}</span>
-                    {s.weight}kg × {s.reps}
-                    {s.drops?.map((d, k) => (
-                      <span key={k} className="text-violet ml-1">
-                        ↳{d.weight}×{d.reps}
+          <div className="group-card">
+            {items.map((log) => (
+              <article key={log.id} className="flex gap-2 pl-4 pr-1 py-3.5 [&+&]:shadow-[inset_0_1px_0_var(--sep)]">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-[17px] font-semibold truncate">{log.exercise}</h3>
+                    <span className="text-[13px] text-sub shrink-0">{log.routine}</span>
+                  </div>
+                  <p className="num text-[18px] text-ink/85 mt-1 leading-snug">
+                    {log.sets.map((s, i) => (
+                      <span key={i}>
+                        {i > 0 && <span className="text-sub/60 mx-1.5">/</span>}
+                        {s.weight}×{s.reps}
+                        {s.drops?.map((d, k) => (
+                          <span key={k} className="text-sub"> ↓{d.weight}×{d.reps}</span>
+                        ))}
                       </span>
                     ))}
-                  </span>
-                ))}
-              </div>
-              {log.memo && (
-                <p className="text-xs text-white/60 flex gap-1.5">
-                  <MessageCircle className="w-3.5 h-3.5 mt-px shrink-0" /> {log.memo}
-                </p>
-              )}
-            </article>
-          ))}
-        </div>
+                  </p>
+                  {log.memo && <p className="text-[14px] text-sub mt-1.5">{log.memo}</p>}
+                </div>
+                <div className="flex shrink-0 -my-1">
+                  <button onClick={() => onEdit(log)} aria-label={`${log.exercise} 수정`} className="tap w-11 h-11 grid place-items-center text-sub">
+                    <Pencil aria-hidden className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                  </button>
+                  <button onClick={() => onDelete(log.id)} aria-label={`${log.exercise} 삭제`} className="tap w-11 h-11 grid place-items-center text-sub">
+                    <Trash2 aria-hidden className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       ))}
     </div>
   );

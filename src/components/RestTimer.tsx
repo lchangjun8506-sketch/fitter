@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { RotateCcw, Timer } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 
 const PRESETS = [60, 90, 120];
 
@@ -31,31 +31,37 @@ export default function RestTimer() {
     setLeft(0);
   };
 
+  const running = left > 0;
   const done = total > 0 && left === 0;
   const pct = total ? ((total - left) / total) * 100 : 0;
   const mm = String(Math.floor(left / 60)).padStart(2, '0');
   const ss = String(left % 60).padStart(2, '0');
 
   return (
-    <div className="card relative overflow-hidden p-3 pl-4 flex items-center gap-3">
-      <div className="absolute inset-y-0 left-0 bg-lime/10 transition-[width] duration-1000 ease-linear" style={{ width: `${pct}%` }} />
-      <Timer className="relative w-5 h-5 text-lime shrink-0" />
-      <div className="relative flex-1">
-        <div className="label">휴식</div>
-        <div className={`text-xl font-extrabold tabular-nums leading-none mt-0.5 ${done ? 'text-lime' : ''}`}>
-          {done ? 'GO! 💥' : `${mm}:${ss}`}
+    <section aria-label="휴식 타이머" className="group-card relative">
+      <div className="flex items-center gap-4 px-4 py-3">
+        <div className="flex-1 min-w-0">
+          <div className="caption">{done ? '휴식 끝' : running ? '휴식 중' : '휴식 타이머'}</div>
+          <div className={`num text-[40px] leading-none mt-1 ${running || done ? 'text-ink' : 'text-sub/60'}`} aria-live="off">
+            {mm}:{ss}
+          </div>
         </div>
-      </div>
-      <div className="relative flex gap-1.5">
-        {PRESETS.map((p) => (
-          <button key={p} onClick={() => start(p)} className="press h-9 px-3 rounded-full bg-raised border border-line text-xs font-bold">
-            {p < 120 ? `${p}s` : `${p / 60}m`}
-          </button>
-        ))}
-        <button onClick={reset} aria-label="타이머 초기화" className="press h-9 w-9 grid place-items-center rounded-full bg-raised border border-line text-mute">
-          <RotateCcw className="w-4 h-4" />
+        <div className="flex bg-fill rounded-[10px] p-0.5">
+          {PRESETS.map((p) => (
+            <button
+              key={p}
+              onClick={() => start(p)}
+              className={`tap h-11 min-w-[44px] px-2.5 rounded-[8px] num text-[17px] transition-colors ${total === p && running ? 'bg-seg shadow-sm' : ''}`}
+            >
+              {p < 120 ? p : '2:00'}
+            </button>
+          ))}
+        </div>
+        <button onClick={reset} aria-label="타이머 초기화" className="tap w-11 h-11 -mr-2 grid place-items-center text-sub">
+          <RotateCcw aria-hidden className="w-5 h-5" strokeWidth={1.75} />
         </button>
       </div>
-    </div>
+      <div className="absolute left-0 bottom-0 h-[2px] bg-ink transition-[width] duration-1000 ease-linear" style={{ width: `${pct}%` }} />
+    </section>
   );
 }

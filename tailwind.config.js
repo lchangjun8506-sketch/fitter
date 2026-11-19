@@ -1,22 +1,28 @@
 /** @type {import('tailwindcss').Config} */
+const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        bg: '#0B0B0F',
-        surface: '#15151C',
-        raised: '#1E1E28',
-        line: 'rgba(255,255,255,0.08)',
-        lime: { DEFAULT: '#D4FF3A', dim: '#A8CC2E' },
-        violet: { DEFAULT: '#8B7CFF' },
-        coral: { DEFAULT: '#FF6B6B' },
-        mute: '#8A8A99',
+        bg: v('bg'),
+        card: v('card'),
+        fill: v('fill'),
+        elev: v('elev'),
+        seg: v('seg'),
+        elevcard: v('elevcard'),
+        ink: v('ink'),
+        sub: v('sub'),
+        onink: v('onink'),
+        up: v('up'),
+        down: v('down'),
+        sep: 'var(--sep)',
       },
       fontFamily: {
-        sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        sans: ['Pretendard Variable', 'Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        display: ['"Barlow Condensed"', 'Pretendard Variable', 'system-ui', 'sans-serif'],
       },
-      borderRadius: { '4xl': '1.75rem' },
+      transitionTimingFunction: { apple: 'cubic-bezier(0.25, 0.1, 0.25, 1)' },
     },
   },
   plugins: [],
