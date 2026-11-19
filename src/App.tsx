@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChartNoAxesColumn, Dumbbell, ListOrdered, Loader2 } from 'lucide-react';
+import { ChartNoAxesColumn, CircleUserRound, Dumbbell, ListOrdered, Loader2, Swords } from 'lucide-react';
 import { useWorkout } from './lib/useWorkout';
+import { useAuth } from './lib/auth';
+import { supabase } from './lib/supabase';
+import { CloudRepo, deviceRepo } from './lib/storage';
+import BattleTab from './components/BattleTab';
+import MeTab from './components/MeTab';
 import { todayStr } from './lib/date';
 import RestTimer from './components/RestTimer';
 import LogForm from './components/LogForm';
@@ -11,15 +16,17 @@ import Toast from './components/Toast';
 import Splash from './components/Splash';
 import type { CustomExercise, Routine, WorkoutLog } from './lib/types';
 
-type Tab = 'log' | 'history' | 'stats';
+type Tab = 'log' | 'history' | 'battle' | 'stats' | 'me';
 const TABS: { id: Tab; label: string; Icon: typeof Dumbbell }[] = [
   { id: 'log', label: '기록', Icon: Dumbbell },
   { id: 'history', label: '히스토리', Icon: ListOrdered },
+  { id: 'battle', label: '대결', Icon: Swords },
   { id: 'stats', label: '분석', Icon: ChartNoAxesColumn },
+  { id: 'me', label: '나', Icon: CircleUserRound },
 ];
-const TITLES: Record<Tab, string> = { log: '오늘의 운동', history: '히스토리', stats: '분석' };
+const TITLES: Record<Tab, string> = { log: '오늘의 운동', history: '히스토리', battle: '대결', stats: '분석', me: '나' };
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
-const TAB_IDS: Tab[] = ['log', 'history', 'stats'];
+const TAB_IDS: Tab[] = ['log', 'history', 'battle', 'stats', 'me'];
 const tabFromHash = (): Tab => {
   const h = location.hash.slice(1) as Tab;
   return TAB_IDS.includes(h) ? h : 'log';
@@ -30,7 +37,10 @@ const todayLabel = () => {
 };
 
 export default function App() {
-  const w = useWorkout();
+  const auth = useAuth();
+  // 로그인하면 서버(Supabase), 아니면 이 기기에 저장
+  const cloud = useMemo(() => (supabase && auth.session ? new CloudRepo(supabase) : null), [auth.session?.user.id]);
+  const w = useWorkout(cloud ?? deviceRepo);
   const [tab, setTab] = useState<Tab>(tabFromHash);
   const [typing, setTyping] = useState(false);
   const [editing, setEditing] = useState<WorkoutLog | null>(null);
@@ -92,7 +102,7 @@ export default function App() {
       <div className={ready ? 'app-enter' : 'opacity-0'}>
       <header className="max-w-md mx-auto px-5 pt-[max(env(safe-area-inset-top),20px)] pb-5">
         <div className="flex items-center gap-2 h-5">
-          <p className="caption">{tab === 'log' ? todayLabel() : `총 ${w.logs.length}개 기록`}</p>
+          <p className="caption">{tab === 'log' ? todayLabel() : tab === 'battle' || tab === 'me' ? auth.handle ?? (auth.session ? '닉네임을 정해 주세요' : '로그인 전') : `총 ${w.logs.length}개 기록`}</p>
           {w.loading && <Loader2 aria-label="불러오는 중" className="w-3.5 h-3.5 animate-spin text-sub" />}
         </div>
         <div className="flex items-end justify-between">
@@ -150,12 +160,16 @@ export default function App() {
           />
         )}
 
+        {tab === 'battle' && <BattleTab toast={setToast} customExercises={w.custom.map((c) => c.exercise)} />}
+
         {tab === 'stats' && <Dashboard logs={w.logs} />}
+
+        {tab === 'me' && <MeTab toast={setToast} cloud={cloud} onImported={() => w.refresh()} />}
       </main>
       </div>
 
       <nav aria-label="주 메뉴" className={`${ready ? 'app-fade' : 'opacity-0'} ${typing ? 'hidden' : ''} fixed bottom-0 inset-x-0 z-50 bg-bg/85 backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_var(--sep)] pb-[env(safe-area-inset-bottom)]`}>
-        <div className="max-w-md mx-auto grid grid-cols-3 h-[56px]">
+        <div className="max-w-md mx-auto grid grid-cols-5 h-[56px]">
           {TABS.map(({ id, label, Icon }) => {
             const on = tab === id;
             return (
@@ -163,7 +177,7 @@ export default function App() {
                 key={id}
                 onClick={() => go(id)}
                 aria-current={on ? 'page' : undefined}
-                className={`tap flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors duration-200 ${on ? 'text-accent' : 'text-sub'}`}
+                className={`tap flex flex-col items-center justify-center gap-1 text-[10px] font-semibold transition-colors duration-200 ${on ? 'text-accent' : 'text-sub'}`}
               >
                 <Icon aria-hidden className="w-6 h-6" strokeWidth={on ? 2.25 : 1.75} />
                 {label}

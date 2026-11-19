@@ -11,11 +11,20 @@ npm run dev        # http://localhost:5173  (?demo=1 을 붙이면 샘플 데이
 npm run build      # dist/ 에 배포용 결과물 생성
 ```
 
+## 기능
+- 운동 기록(세트·드롭세트), 휴식 타이머, 점진적 과부하 코칭, 성장 분석
+- **로그인**: 카카오·구글·애플 → `닉네임-0000` 아이디 발급
+- **대결**: 친구 추가, 연속 운동 순위, 1:1 볼륨 챌린지(3/7/14일)
+- **인바디**: 결과지 사진·PDF를 올리면 Claude가 수치를 읽어 기록, 이전 측정과 비교
+
+서버(Supabase·Claude) 연결 방법은 **[SETUP.md](SETUP.md)** 를 보세요. 연결 전에도 기록 기능은 이 기기 저장으로 동작합니다.
+
 ## 데이터 저장 위치
 
 | 모드 | 설정 | 특징 |
 |---|---|---|
-| 로컬 (기본) | `.env` 없음 | 브라우저 localStorage. 기기 간 동기화 안 됨 |
+| 계정 (권장) | `VITE_SUPABASE_*` + 로그인 | 서버 저장, 기기 간 동기화, 대결·인바디 사용 가능 |
+| 로컬 (기본) | `.env` 없음 / 로그인 전 | 브라우저 localStorage. 기기 간 동기화 안 됨 |
 | 구글 시트 | `VITE_SHEETS_API_URL` 설정 | 기존 시트 데이터 그대로 사용 |
 
 ### 기존 구글 시트 연결하기
@@ -35,7 +44,12 @@ GitHub에 올린 뒤 Vercel에서 Import → Framework `Vite` → 환경변수 `
 src/
   App.tsx                 탭(기록/히스토리/성장) + 하단 내비
   components/             RestTimer, LogForm, HistoryList, Dashboard, AddExerciseSheet, Toast
-  lib/storage.ts          저장소 인터페이스 (Local / Sheets) ← 백엔드 교체 지점
+  lib/storage.ts          저장소 인터페이스 (Local / Sheets / Cloud)
+  lib/auth.tsx            로그인 상태, 닉네임 발급
+  lib/social.ts           친구·스트릭·챌린지 (Supabase RPC)
+  lib/inbody.ts           결과지 업로드·판독·저장
+api/inbody.ts             인바디 판독 서버 함수 (Vercel, Claude API)
+supabase/migrations/      DB 스키마·권한·함수 (SQL Editor에 붙여넣기)
   lib/analysis.ts         볼륨·1RM·코칭 팁·정체 판정 로직
   lib/useWorkout.ts       데이터 로딩/저장 훅
   data/exercises.ts       루틴별 기본 종목
@@ -43,5 +57,5 @@ apps-script/Code.gs       구글 시트 JSON API
 ```
 
 ## 다음 단계 로드맵
-- **Supabase 연동**: 로그인 + 실시간 동기화. `lib/storage.ts`에 `SupabaseRepo`만 추가하면 UI 수정 없음
+- **네이버 로그인**: Supabase 기본 미지원 → 서버 함수로 OAuth 연동 필요
 - **스토어 앱**: Capacitor로 감싸면 같은 코드로 iOS/Android 앱 빌드 가능

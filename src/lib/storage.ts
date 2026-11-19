@@ -1,4 +1,5 @@
-import type { CustomExercise, NewLog, WorkoutLog } from './types';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { CustomExercise, NewLog, Routine, WorkoutLog } from './types';
 import { nowStr } from './date';
 import { DEMO_LOGS } from '../data/demo';
 
@@ -8,7 +9,7 @@ import { DEMO_LOGS } from '../data/demo';
  * 이 파일에 Repo 구현 하나만 추가하면 됩니다.
  */
 export interface Repo {
-  readonly kind: 'local' | 'sheets';
+  readonly kind: 'local' | 'sheets' | 'cloud';
   listLogs(): Promise<WorkoutLog[]>;
   addLog(log: NewLog): Promise<WorkoutLog>;
   updateLog(log: WorkoutLog): Promise<void>;
@@ -101,5 +102,63 @@ class SheetsRepo implements Repo {
   }
 }
 
+/* ---------- 3) Supabase (로그인 계정) ---------- */
+type LogRow = { id: string; date: string; routine: string; exercise: string; sets: WorkoutLog['sets']; memo: string | null; created_at: string };
+const fromRow = (r: LogRow): WorkoutLog => ({
+  id: r.id, date: r.date, routine: r.routine as Routine, exercise: r.exercise, sets: r.sets,
+  memo: r.memo ?? undefined, createdAt: r.created_at,
+});
+
+export class CloudRepo implements Repo {
+  readonly kind = 'cloud' as const;
+  constructor(private sb: SupabaseClient) {}
+  private ok<T>({ data, error }: { data: T; error: unknown }): T {
+    if (error) throw error;
+    return data;
+  }
+  async listLogs() {
+    const rows = this.ok(await this.sb.from('workout_logs').select('*').order('date', { ascending: false }).limit(5000));
+    return (rows as LogRow[]).map(fromRow);
+  }
+  async addLog(log: NewLog) {
+    const row = this.ok(await this.sb.from('workout_logs')
+      .insert({ date: log.date, routine: log.routine, exercise: log.exercise, sets: log.sets, memo: log.memo ?? null })
+      .select().single());
+    return fromRow(row as LogRow);
+  }
+  async updateLog(log: WorkoutLog) {
+    this.ok(await this.sb.from('workout_logs')
+      .update({ date: log.date, routine: log.routine, exercise: log.exercise, sets: log.sets, memo: log.memo ?? null })
+      .eq('id', log.id));
+  }
+  async deleteLog(id: string) {
+    this.ok(await this.sb.from('workout_logs').delete().eq('id', id));
+  }
+  async listCustom() {
+    return this.ok(await this.sb.from('custom_exercises').select('routine, exercise')) as CustomExercise[];
+  }
+  async addCustom(item: CustomExercise) {
+    this.ok(await this.sb.from('custom_exercises').upsert(item, { onConflict: 'user_id,routine,exercise', ignoreDuplicates: true }));
+  }
+  /** 이 기기 기록을 계정으로 한 번에 옮기기 */
+  async importLogs(logs: WorkoutLog[]) {
+    if (!logs.length) return;
+    this.ok(await this.sb.from('workout_logs').insert(
+      logs.map((l) => ({ date: l.date, routine: l.routine, exercise: l.exercise, sets: l.sets, memo: l.memo ?? null })),
+    ));
+  }
+}
+
 const SHEETS_URL = import.meta.env.VITE_SHEETS_API_URL as string | undefined;
-export const repo: Repo = SHEETS_URL ? new SheetsRepo(SHEETS_URL) : new LocalRepo();
+/** 로그인하지 않았을 때 쓰는 저장소 (이 기기 또는 구글 시트) */
+export const deviceRepo: Repo = SHEETS_URL ? new SheetsRepo(SHEETS_URL) : new LocalRepo();
+
+/** 로그인 전 이 기기에 쌓인 기록 (계정 이전용) */
+export const pendingLocal = {
+  logs: () => read<WorkoutLog[]>(LS_LOGS, []),
+  custom: () => read<CustomExercise[]>(LS_CUSTOM, []),
+  clear: () => {
+    write(LS_LOGS, []);
+    write(LS_CUSTOM, []);
+  },
+};

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { repo } from './storage';
+import type { Repo } from './storage';
 import { sortLogs } from './analysis';
 import type { CustomExercise, NewLog, WorkoutLog } from './types';
 
-export function useWorkout() {
+export function useWorkout(repo: Repo) {
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [custom, setCustom] = useState<CustomExercise[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +21,7 @@ export function useWorkout() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [repo]);
 
   useEffect(() => {
     refresh();
@@ -44,6 +44,7 @@ export function useWorkout() {
     loading,
     error,
     mode: repo.kind,
+    refresh,
     add: wrap((log: NewLog) => repo.addLog(log)),
     update: wrap((log: WorkoutLog) => repo.updateLog(log)),
     remove: wrap((id: string) => repo.deleteLog(id)),
