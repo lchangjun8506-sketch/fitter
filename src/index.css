@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { background: #0B0B0F; color: #F4F4F6; }
+body { -webkit-tap-highlight-color: transparent; font-feature-settings: 'tnum'; }
+input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; }
+input[type='date']::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .6; }
+
+@layer components {
+  .card { @apply bg-surface rounded-4xl border border-line; }
+  .press { @apply transition-transform duration-100 active:scale-[0.96]; }
+  .field { @apply bg-raised border border-line rounded-2xl text-white placeholder:text-mute/70 focus:outline-none focus:border-lime/60 focus:ring-2 focus:ring-lime/20; }
+  .chip { @apply px-3 py-1.5 rounded-full text-xs font-semibold border press; }
+  .label { @apply text-[11px] font-semibold text-mute uppercase tracking-wider; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+}
