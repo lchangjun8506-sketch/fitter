@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg'],
+      includeAssets: ['apple-touch-icon.png', 'favicon-64.png'],
       workbox: {
         // 폰트 조각은 처음 쓸 때 받아서 캐시 → 이후 오프라인에서도 동일하게 표시
         runtimeCaching: [
@@ -23,11 +23,13 @@ export default defineConfig({
         short_name: 'FITTER',
         description: '헬린이를 위한 점진적 과부하 운동일지',
         theme_color: '#111111',
-        background_color: '#F2F2F0',
+        background_color: '#111111',
         display: 'standalone',
         start_url: '/',
         icons: [
-          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
     }),
