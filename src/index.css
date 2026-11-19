@@ -92,13 +92,13 @@ input[type='date']::-webkit-calendar-picker-indicator { opacity: .45; }
 .gate-leaving { opacity: 0; pointer-events: none; }
 .gate-mark {
   position: absolute; left: 50%; top: 50%;
-  font-family: Anton, sans-serif; font-size: 96px; line-height: 0.86; letter-spacing: 0.01em;
+  font-family: Anton, sans-serif; font-size: min(44vw, 20dvh, 180px); line-height: 0.86; letter-spacing: 0.01em;
   transform: translate(-50%, -50%);
   transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.gate-tag { position: absolute; right: -3rem; top: -1.25rem; width: 2.25rem; height: 14px; border-radius: 2px; background: #DA2E22; transform-origin: left; }
-/* 로그인 단계: 같은 글자가 위로 올라가며 작아짐 */
-.gate-signin .gate-mark { transform: translate(-50%, calc(-50% - 24dvh)) scale(0.62); }
+.gate-tag { position: absolute; right: -0.48em; top: -0.18em; width: 0.36em; height: 0.135em; border-radius: 2px; background: #DA2E22; transform-origin: left; }
+/* 로그인 단계: 같은 크기 그대로, 로그인 영역 위 빈 공간의 정가운데로만 올라감 (--lift = 로그인 영역 높이의 절반, Gate에서 측정) */
+.gate-signin .gate-mark { transform: translate(-50%, calc(-50% - var(--lift, 165px))); }
 .gate-auth {
   position: absolute; left: 24px; right: 24px; max-width: 420px; margin: 0 auto;
   bottom: max(env(safe-area-inset-bottom), 32px);

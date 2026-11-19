@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { LoginButtons } from './LoginPanel';
 
@@ -30,6 +30,21 @@ export default function Gate({ onOpenChange }: { onOpenChange: (open: boolean) =
   const [instant, setInstant] = useState(() => seenThisSession()); // 애니메이션 없이 바로 배치
   const allowed = !enabled || !!session;
   const wasOpen = useRef(false);
+  const root = useRef<HTMLDivElement>(null);
+  const auth = useRef<HTMLElement>(null);
+
+  // 로그인 영역(버튼 묶음 + 아래 여백) 높이의 절반만큼 올리면 남은 공간의 정가운데
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = auth.current, box = root.current;
+      if (!el || !box) return;
+      const fromBottom = box.clientHeight - el.offsetTop;
+      box.style.setProperty('--lift', `${Math.round(fromBottom / 2)}px`);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  });
 
   // 폰트 준비 후 인트로 시작 (글꼴이 바뀌며 깜빡이지 않게)
   useEffect(() => {
@@ -89,6 +104,7 @@ export default function Gate({ onOpenChange }: { onOpenChange: (open: boolean) =
 
   return (
     <div
+      ref={root}
       className={`gate fixed inset-0 z-[100] bg-[#F2ECDF] text-[#141414] ${phase === 'leaving' ? 'gate-leaving' : ''} ${phase === 'signin' ? 'gate-signin' : ''} ${instant ? 'gate-instant' : ''}`}
       onClick={() => phase === 'intro' && setIntroDone(true)}
     >
@@ -101,7 +117,7 @@ export default function Gate({ onOpenChange }: { onOpenChange: (open: boolean) =
         </div>
       </div>
 
-      <section className="gate-auth" aria-hidden={phase !== 'signin'} aria-label="로그인">
+      <section ref={auth} className="gate-auth" aria-hidden={phase !== 'signin'} aria-label="로그인">
         <div className="text-center mb-2">
           <h1 className="text-[22px] font-bold tracking-[-0.02em]">로그인</h1>
           <p className="mt-1.5 text-[15px] text-[#6B6358]">카카오 또는 구글 계정으로 시작하세요.</p>
