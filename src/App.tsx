@@ -29,7 +29,7 @@ const TABS: { id: Tab; label: string; Icon: typeof Dumbbell }[] = [
 const TITLES: Record<Tab, string> = { log: '오늘의 운동', stats: '분석', lab: '실험실', me: 'MY' };
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 const TAB_IDS: Tab[] = ['log', 'stats', 'lab', 'me'];
-const LAB_SUBS: LabSub[] = ['battle', '1rm', 'plates'];
+const LAB_SUBS: LabSub[] = ['battle', '1rm', 'plates', 'alerts'];
 
 /** 주소: #stats, #stats/inbody, #lab, #lab/battle|1rm|plates, #me, #me/history (예전 #history → MY·히스토리, #battle → 실험실·대결) */
 interface Route { tab: Tab; stats: StatsSub; me: MySub; lab: LabSub }
@@ -312,6 +312,10 @@ export default function App() {
         logs={w.logs}
         busy={w.loading}
         onClose={closeOverlay}
+        onOpenAlerts={() => {
+          setOverlay({ kind: 'none' });
+          navigate({ ...route, tab: 'lab', lab: 'alerts' });
+        }}
         onDelete={async (id) => {
           if (!confirm('이 기록을 삭제할까요?')) return;
           await w.remove(id);

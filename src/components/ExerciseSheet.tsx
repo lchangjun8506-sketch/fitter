@@ -7,6 +7,8 @@ import { draftKey, getDraft, setDraft, type DraftRow } from '../lib/drafts';
 import { useRest } from '../lib/rest';
 import type { NewLog, Routine, WorkoutLog, WorkoutSet } from '../lib/types';
 import RestPill from './RestTimer';
+import { pushEnabled, pushSupport } from '../lib/push';
+import { supabase } from '../lib/supabase';
 
 export interface ExerciseTarget {
   routine: Routine;
@@ -27,6 +29,8 @@ interface Props {
   onClose: () => void;
   onSave: (log: NewLog, id?: string) => Promise<boolean>;
   onDelete: (id: string) => void;
+  /** 워치 알림 설정 화면으로 */
+  onOpenAlerts: () => void;
 }
 
 type Row = DraftRow;
@@ -89,7 +93,7 @@ function Stepper({ label, unit, value, onChange, kind }: { label: string; unit: 
   );
 }
 
-export default function ExerciseSheet({ open, target, logs, busy, onClose, onSave, onDelete }: Props) {
+export default function ExerciseSheet({ open, target, logs, busy, onClose, onSave, onDelete, onOpenAlerts }: Props) {
   const rest = useRest();
   const editing = target?.editing;
   const [date, setDate] = useState(todayStr());
@@ -299,6 +303,11 @@ export default function ExerciseSheet({ open, target, logs, busy, onClose, onSav
               <button onClick={() => setMemoOpen(true)} className="tap h-11 px-1 text-[15px] font-medium text-sub">메모 추가</button>
             )}
           </div>
+          {open && !!supabase && !pushEnabled() && pushSupport() !== 'unsupported' && (
+            <button onClick={onOpenAlerts} className="tap mt-2 h-11 px-1 text-[14px] font-medium text-sub flex items-center gap-1">
+              애플워치로 휴식 끝 알림 받기 <span aria-hidden className="text-sub/60">›</span>
+            </button>
+          )}
           {memoOpen && (
             <div className="group-card mt-4">
               <input value={memo} onChange={(e) => setMemo(e.target.value)} aria-label="메모" placeholder="컨디션, 자세, 통증 등"

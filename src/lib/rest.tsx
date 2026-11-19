@@ -1,3 +1,4 @@
+import { cancelRestPush, scheduleRestPush } from './push';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 /**
@@ -125,10 +126,12 @@ export function RestProvider({ children }: { children: ReactNode }) {
     setLeft(s);
     keepAwake();
     tick.current = window.setInterval(sync, 250);
+    scheduleRestPush(s); // 잠금화면·애플워치 알림 (켜 둔 경우만)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const reset = useCallback(() => {
+    if (endAt.current) cancelRestPush();
     clearInterval(tick.current);
     endAt.current = 0;
     releaseWake();

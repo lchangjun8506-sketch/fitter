@@ -129,9 +129,9 @@ export default function TodayPanel({ logs, custom, inbody, onOpen, onOther, toas
             {ai ? 'AI 추천' : '추천 루틴'} · {plan.routine}
           </h2>
           {ai ? (
-            <button onClick={() => setAi(null)} className="tap h-9 px-1 pb-2 text-[14px] text-sub">기본 추천 보기</button>
+            <button onClick={() => setAi(null)} className="tap h-11 px-1 pb-2 text-[14px] text-sub">기본 추천 보기</button>
           ) : (
-            <button onClick={() => setSheet(true)} className="tap h-9 px-1 pb-2 text-[14px] font-semibold text-accent flex items-center gap-1">
+            <button onClick={() => setSheet(true)} className="tap h-11 px-1 pb-2 text-[14px] font-semibold text-accent flex items-center gap-1">
               <Sparkles aria-hidden className="w-4 h-4" strokeWidth={2} /> AI에게 묻기
             </button>
           )}

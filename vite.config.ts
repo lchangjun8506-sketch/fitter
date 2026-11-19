@@ -45,6 +45,8 @@ export default defineConfig({
       workbox: {
         // OCR 파일(수 MB)은 미리 받지 않고, 처음 인바디를 올릴 때 받아서 캐시
         globIgnores: ['ocr/**'],
+        // 휴식 끝 알림(푸시) 받기
+        importScripts: ['push-sw.js'],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/ocr/'),

@@ -103,6 +103,15 @@ Vercel → 프로젝트 → **Settings → Environment Variables** 에 추가:
 - 가벼운 모델(Claude Haiku)을 써서 한 번에 약 1~2원, 계정당 하루 5번까지예요 (`api/routine.ts`의 `DAILY_LIMIT`).
 - AI에는 최근 45일 종목별 핵심 수치와 최근 인바디 2회만 보내요. 메모·사진은 보내지 않아요.
 
+## 워치 휴식 알림 (실험실)
+
+- 휴식이 끝나면 잠금화면·애플워치로 알림을 보내요. 무료예요.
+- 설정:
+  1. Supabase SQL Editor에서 `0005_rest_push.sql` 실행
+  2. Vercel 환경 변수 `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (이미 넣어 둠. 새로 만들려면 `npx web-push generate-vapid-keys`)
+- 사용: 아이폰 Safari → 공유 → 홈 화면에 추가 → 홈 화면의 FITTER → 실험실 → 워치 휴식 알림 → 켜기 → 10초 테스트
+- 워치는 아이폰이 잠겨 있을 때 알림을 받아요 (iOS 16.4 이상). 마지막으로 켠 기기 한 대로만 보내요.
+
 ## 확인 순서
 
 1. 앱 → **나** 탭 → 카카오로 로그인 → 닉네임 정하기 → `닉네임-0000` 아이디가 생김
