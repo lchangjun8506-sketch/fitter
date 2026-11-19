@@ -19,6 +19,11 @@ const TABS: { id: Tab; label: string; Icon: typeof Dumbbell }[] = [
 ];
 const TITLES: Record<Tab, string> = { log: '오늘의 운동', history: '히스토리', stats: '분석' };
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+const TAB_IDS: Tab[] = ['log', 'history', 'stats'];
+const tabFromHash = (): Tab => {
+  const h = location.hash.slice(1) as Tab;
+  return TAB_IDS.includes(h) ? h : 'log';
+};
 const todayLabel = () => {
   const d = new Date();
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WEEK[d.getDay()]}요일`;
@@ -26,7 +31,8 @@ const todayLabel = () => {
 
 export default function App() {
   const w = useWorkout();
-  const [tab, setTab] = useState<Tab>('log');
+  const [tab, setTab] = useState<Tab>(tabFromHash);
+  const [typing, setTyping] = useState(false);
   const [editing, setEditing] = useState<WorkoutLog | null>(null);
   const [sheet, setSheet] = useState<{ open: boolean; routine: Routine }>({ open: false, routine: '가슴·삼두' });
   const [pending, setPending] = useState<CustomExercise | null>(null);
@@ -39,9 +45,42 @@ export default function App() {
     return () => clearTimeout(t);
   }, [toast]);
 
+  // 안드로이드 뒤로가기 / iOS 스와이프 뒤로: 탭과 시트를 히스토리에 연결해 앱이 바로 꺼지지 않게
+  useEffect(() => {
+    const onPop = () => {
+      setTab(tabFromHash());
+      setSheet((s) => (s.open ? { ...s, open: false } : s));
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  // 키보드가 올라와 있는 동안 하단 탭 바 숨김 (iOS는 키보드 위로 떠오르고, 안드로이드는 화면이 줄어듦)
+  useEffect(() => {
+    const isField = (el: Element | null) => !!el && el.matches('input:not([type=date]), textarea');
+    const onIn = (e: FocusEvent) => isField(e.target as Element) && setTyping(true);
+    const onOut = () => setTimeout(() => setTyping(isField(document.activeElement)), 0);
+    document.addEventListener('focusin', onIn);
+    document.addEventListener('focusout', onOut);
+    return () => {
+      document.removeEventListener('focusin', onIn);
+      document.removeEventListener('focusout', onOut);
+    };
+  }, []);
+
+  const openSheet = (routine: Routine) => {
+    history.pushState({ sheet: true }, '');
+    setSheet({ open: true, routine });
+  };
+  const closeSheet = () => {
+    if (history.state?.sheet) history.back(); // popstate에서 닫힘
+    else setSheet((s) => ({ ...s, open: false }));
+  };
+
   const todayCount = useMemo(() => w.logs.filter((l) => l.date === todayStr()).length, [w.logs]);
 
   const go = (t: Tab) => {
+    if (t !== tab) history.pushState(null, '', t === 'log' ? location.pathname + location.search : `#${t}`);
     setTab(t);
     window.scrollTo({ top: 0 });
   };
@@ -49,7 +88,7 @@ export default function App() {
   return (
     <>
     <Splash onDone={() => setReady(true)} />
-    <div className="min-h-screen pb-[calc(88px+env(safe-area-inset-bottom))]">
+    <div className="min-h-[100dvh] pb-[calc(88px+env(safe-area-inset-bottom))]">
       <div className={ready ? 'app-enter' : 'opacity-0'}>
       <header className="max-w-md mx-auto px-5 pt-[max(env(safe-area-inset-top),20px)] pb-5">
         <div className="flex items-center gap-2 h-5">
@@ -81,7 +120,7 @@ export default function App() {
             editing={editing}
             busy={w.loading}
             pendingExercise={pending}
-            onOpenAddExercise={(routine) => setSheet({ open: true, routine })}
+            onOpenAddExercise={openSheet}
             onCancelEdit={() => setEditing(null)}
             onSave={async (log, id) => {
               try {
@@ -115,7 +154,7 @@ export default function App() {
       </main>
       </div>
 
-      <nav aria-label="주 메뉴" className={`${ready ? 'app-fade' : 'opacity-0'} fixed bottom-0 inset-x-0 z-50 bg-bg/85 backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_var(--sep)] pb-[env(safe-area-inset-bottom)]`}>
+      <nav aria-label="주 메뉴" className={`${ready ? 'app-fade' : 'opacity-0'} ${typing ? 'hidden' : ''} fixed bottom-0 inset-x-0 z-50 bg-bg/85 backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_var(--sep)] pb-[env(safe-area-inset-bottom)]`}>
         <div className="max-w-md mx-auto grid grid-cols-3 h-[56px]">
           {TABS.map(({ id, label, Icon }) => {
             const on = tab === id;
@@ -137,9 +176,9 @@ export default function App() {
       <AddExerciseSheet
         open={sheet.open}
         initialRoutine={sheet.routine}
-        onClose={() => setSheet((s) => ({ ...s, open: false }))}
+        onClose={closeSheet}
         onSubmit={async (routine, exercise) => {
-          setSheet((s) => ({ ...s, open: false }));
+          closeSheet();
           await w.addCustom({ routine, exercise });
           setPending({ routine, exercise });
           setToast(`${exercise} 추가됨`);

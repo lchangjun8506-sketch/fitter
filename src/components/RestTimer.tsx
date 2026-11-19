@@ -3,30 +3,97 @@ import { RotateCcw } from 'lucide-react';
 
 const PRESETS = [60, 90, 120];
 
+type WakeLock = { release: () => Promise<void> };
+
+/** 끝나는 시각 기준으로 계산 → 화면이 꺼지거나 다른 앱에 다녀와도 정확 */
 export default function RestTimer() {
   const [total, setTotal] = useState(0);
   const [left, setLeft] = useState(0);
-  const ref = useRef<number>();
+  const endAt = useRef(0);
+  const tick = useRef<number>();
+  const audio = useRef<AudioContext | null>(null);
+  const wake = useRef<WakeLock | null>(null);
 
-  useEffect(() => () => clearInterval(ref.current), []);
+  const releaseWake = () => {
+    wake.current?.release().catch(() => {});
+    wake.current = null;
+  };
+
+  // 휴식 중엔 화면이 꺼지지 않게 (iOS 16.4+, 안드로이드 크롬)
+  const keepAwake = async () => {
+    try {
+      const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<WakeLock> } };
+      if (nav.wakeLock && !wake.current) wake.current = await nav.wakeLock.request('screen');
+    } catch {
+      /* 저전력 모드 등에서는 거부될 수 있음 */
+    }
+  };
+
+  // 종료 알림: 안드로이드는 진동, iOS는 진동 API가 없어 짧은 비프음
+  const notify = () => {
+    navigator.vibrate?.([200, 100, 200]);
+    const ctx = audio.current;
+    if (!ctx) return;
+    [0, 0.25].forEach((t) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.18);
+      o.connect(g).connect(ctx.destination);
+      o.start(ctx.currentTime + t);
+      o.stop(ctx.currentTime + t + 0.2);
+    });
+  };
+
+  const sync = () => {
+    if (!endAt.current) return;
+    const remain = Math.max(0, Math.ceil((endAt.current - Date.now()) / 1000));
+    setLeft(remain);
+    if (remain === 0) {
+      clearInterval(tick.current);
+      endAt.current = 0;
+      releaseWake();
+      notify();
+    }
+  };
+
+  useEffect(() => {
+    // 앱으로 돌아왔을 때 즉시 남은 시간 보정 + 화면 켜짐 재요청(백그라운드 가면 해제됨)
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      sync();
+      if (endAt.current) keepAwake();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      clearInterval(tick.current);
+      releaseWake();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const start = (sec: number) => {
-    clearInterval(ref.current);
+    // iOS는 사용자 탭 안에서만 소리 재생 권한이 열림 → 시작 버튼에서 미리 준비
+    try {
+      const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!audio.current && AC) audio.current = new AC();
+      audio.current?.resume();
+    } catch {
+      /* noop */
+    }
+    clearInterval(tick.current);
+    endAt.current = Date.now() + sec * 1000;
     setTotal(sec);
     setLeft(sec);
-    ref.current = window.setInterval(() => {
-      setLeft((v) => {
-        if (v <= 1) {
-          clearInterval(ref.current);
-          navigator.vibrate?.([200, 100, 200]);
-          return 0;
-        }
-        return v - 1;
-      });
-    }, 1000);
+    keepAwake();
+    tick.current = window.setInterval(sync, 250);
   };
   const reset = () => {
-    clearInterval(ref.current);
+    clearInterval(tick.current);
+    endAt.current = 0;
+    releaseWake();
     setTotal(0);
     setLeft(0);
   };

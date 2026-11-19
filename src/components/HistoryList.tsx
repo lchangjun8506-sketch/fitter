@@ -28,7 +28,7 @@ export default function HistoryList({ logs, onEdit, onDelete }: Props) {
       <label className="flex items-center gap-2 h-11 px-3 rounded-[12px] bg-fill">
         <Search aria-hidden className="w-[18px] h-[18px] text-sub" strokeWidth={2} />
         <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="기록 검색" placeholder="검색"
-          className="flex-1 bg-transparent text-[16px] placeholder:text-sub focus:outline-none" />
+          className="flex-1 min-w-0 bg-transparent text-[16px] placeholder:text-sub focus:outline-none" />
       </label>
 
       {groups.length === 0 && (

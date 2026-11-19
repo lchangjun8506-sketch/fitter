@@ -16,13 +16,16 @@ const toRows = (sets: WorkoutSet[]): Row[] =>
 
 const DEFAULT_ROWS: Row[] = toRows([{ weight: 60, reps: 10 }, { weight: 60, reps: 10 }, { weight: 60, reps: 8 }]);
 
+/** 일부 키패드는 소수점이 쉼표(,)로 입력됨 */
+const num = (v: string) => parseFloat(v.replace(',', '.'));
+
 function toSets(rows: Row[]): WorkoutSet[] {
   const out: WorkoutSet[] = [];
   for (const r of rows) {
-    const w = parseFloat(r.weight), n = parseInt(r.reps);
+    const w = num(r.weight), n = parseInt(r.reps);
     if (isNaN(w) || isNaN(n)) continue;
     const drops = r.drops
-      .map((d) => ({ weight: parseFloat(d.weight), reps: parseInt(d.reps) }))
+      .map((d) => ({ weight: num(d.weight), reps: parseInt(d.reps) }))
       .filter((d) => !isNaN(d.weight) && !isNaN(d.reps));
     out.push(drops.length ? { weight: w, reps: n, drops } : { weight: w, reps: n });
   }
@@ -149,7 +152,7 @@ export default function LogForm({ logs, custom, editing, busy, onSave, onCancelE
         <div className="group-card">
           <label className="row relative gap-3 min-h-[64px]">
             <span className="sr-only">운동 종목</span>
-            <select value={exercise} onChange={(e) => pickExercise(e.target.value)} className="absolute inset-0 opacity-0 w-full cursor-pointer">
+            <select value={exercise} onChange={(e) => pickExercise(e.target.value)} className="absolute inset-0 opacity-0 w-full cursor-pointer text-[16px]">
               {options.map((o) => (
                 <option key={o} value={o}>{o}</option>
               ))}
@@ -218,12 +221,12 @@ export default function LogForm({ logs, custom, editing, busy, onSave, onCancelE
             <div key={i} className="shadow-[inset_0_1px_0_var(--sep)]">
               <div className="grid grid-cols-[40px_1fr_1fr_88px] items-center px-4 h-[60px] gap-2">
                 <span className="num text-[22px] text-sub">{i + 1}</span>
-                <input aria-label={`${i + 1}세트 무게`} inputMode="decimal" value={r.weight} onChange={(e) => patch(i, { weight: e.target.value })} placeholder="0"
+                <input aria-label={`${i + 1}세트 무게`} inputMode="decimal" autoComplete="off" enterKeyHint="next" value={r.weight} onChange={(e) => patch(i, { weight: e.target.value })} placeholder="0"
                   className="num min-w-0 h-11 rounded-[10px] bg-fill text-center text-[24px] placeholder:text-sub/50 focus:outline-none focus:ring-2 focus:ring-ink" />
-                <input aria-label={`${i + 1}세트 횟수`} inputMode="numeric" value={r.reps} onChange={(e) => patch(i, { reps: e.target.value })} placeholder="0"
+                <input aria-label={`${i + 1}세트 횟수`} inputMode="numeric" pattern="[0-9]*" autoComplete="off" enterKeyHint="next" value={r.reps} onChange={(e) => patch(i, { reps: e.target.value })} placeholder="0"
                   className="num min-w-0 h-11 rounded-[10px] bg-fill text-center text-[24px] placeholder:text-sub/50 focus:outline-none focus:ring-2 focus:ring-ink" />
                 <div className="flex justify-end -mr-2">
-                  <button onClick={() => patch(i, { drops: [...r.drops, { weight: '', reps: '' }] })} className="tap h-11 px-1.5 text-[13px] font-semibold text-sub">드롭</button>
+                  <button onClick={() => patch(i, { drops: [...r.drops, { weight: '', reps: '' }] })} className="tap h-11 min-w-[44px] px-1.5 text-[13px] font-semibold text-sub">드롭</button>
                   <button onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))} aria-label={`${i + 1}세트 삭제`} className="tap w-11 h-11 grid place-items-center text-sub">
                     <Minus aria-hidden className="w-5 h-5" strokeWidth={1.75} />
                   </button>
@@ -232,10 +235,10 @@ export default function LogForm({ logs, custom, editing, busy, onSave, onCancelE
               {r.drops.map((d, k) => (
                 <div key={k} className="grid grid-cols-[40px_1fr_1fr_88px] items-center px-4 h-12 gap-2">
                   <span className="text-[12px] font-semibold text-sub">DROP</span>
-                  <input aria-label="드롭 무게" inputMode="decimal" value={d.weight} placeholder="0"
+                  <input aria-label="드롭 무게" inputMode="decimal" autoComplete="off" enterKeyHint="next" value={d.weight} placeholder="0"
                     onChange={(e) => patch(i, { drops: r.drops.map((x, m) => (m === k ? { ...x, weight: e.target.value } : x)) })}
                     className="num min-w-0 h-9 rounded-[8px] bg-fill/60 text-center text-[19px] placeholder:text-sub/50 focus:outline-none focus:ring-2 focus:ring-ink" />
-                  <input aria-label="드롭 횟수" inputMode="numeric" value={d.reps} placeholder="0"
+                  <input aria-label="드롭 횟수" inputMode="numeric" pattern="[0-9]*" autoComplete="off" enterKeyHint="next" value={d.reps} placeholder="0"
                     onChange={(e) => patch(i, { drops: r.drops.map((x, m) => (m === k ? { ...x, reps: e.target.value } : x)) })}
                     className="num min-w-0 h-9 rounded-[8px] bg-fill/60 text-center text-[19px] placeholder:text-sub/50 focus:outline-none focus:ring-2 focus:ring-ink" />
                   <div className="flex justify-end -mr-2">

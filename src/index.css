@@ -41,6 +41,15 @@
 }
 
 html, body, #root { background: rgb(var(--bg)); color: rgb(var(--ink)); }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+/* 안드로이드 크롬: 세트 입력 중 아래로 당겨 실수로 새로고침되는 것 방지. iOS: 바운스 시 배경 노출 방지 */
+html, body { overscroll-behavior-y: none; }
+/* 더블탭 확대·300ms 지연 제거 (핀치 확대는 유지) */
+button, a, input, select, label { touch-action: manipulation; }
+button { -webkit-user-select: none; user-select: none; }
+/* iOS 날짜 입력: 기본 스타일 제거 + 오른쪽 정렬 */
+input[type='date'] { -webkit-appearance: none; appearance: none; min-height: 1.5em; }
+input[type='date']::-webkit-date-and-time-value { text-align: right; }
 body { -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
 input[type='date']::-webkit-calendar-picker-indicator { opacity: .45; }
 :focus-visible { outline: 2px solid rgb(var(--ink)); outline-offset: 2px; }

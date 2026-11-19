@@ -24,7 +24,11 @@ export default defineConfig({
         description: '헬린이를 위한 점진적 과부하 운동일지',
         theme_color: '#F2ECDF',
         background_color: '#F2ECDF',
+        id: '/',
+        lang: 'ko',
+        scope: '/',
         display: 'standalone',
+        orientation: 'portrait',
         start_url: '/',
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
