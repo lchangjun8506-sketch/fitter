@@ -17,9 +17,11 @@
    - **Publishable key** (`sb_publishable_...`): Project Settings → **API Keys** → `VITE_SUPABASE_ANON_KEY`
      (예전 화면의 `anon public` 키와 같은 역할이에요)
    - **Secret key(`sb_secret_...`)는 쓰지 않아요.** 앱이나 환경 변수에 넣지 말고 누구에게도 보여 주지 마세요.
-4. **Authentication → URL Configuration**
-   - Site URL: Vercel 주소 (예: `https://fitter-xxxx.vercel.app`)
-   - Redirect URLs: 같은 주소 + `http://localhost:5173` 추가
+4. **Authentication → URL Configuration** (Vercel에 fitter를 Import해서 주소가 생긴 뒤에)
+   - **Site URL**: Vercel 주소를 그대로 (예: `https://fitter-xxxx.vercel.app`) → Save
+   - **Redirect URLs** → Add URL 로 두 줄 추가 → Save
+     - `https://fitter-xxxx.vercel.app/**`
+     - `http://localhost:5173/**` (내 컴퓨터에서 개발할 때용, 선택)
 
 > 아래 각 로그인 설정에서 쓰는 **콜백 주소**는 모두 같아요:
 > `https://<프로젝트ID>.supabase.co/auth/v1/callback`

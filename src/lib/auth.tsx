@@ -43,10 +43,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (provider: Provider) => {
     if (!supabase) return;
+    // 돌아올 주소는 사이트 첫 화면으로 고정(Supabase 허용 목록과 정확히 맞추기 위해),
+    // 보고 있던 탭은 따로 기억했다가 로그인 후 복원
+    try {
+      sessionStorage.setItem('fitter.returnHash', location.hash);
+    } catch {
+      /* noop */
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      // 로그인 후 돌아올 곳: 지금 보고 있는 화면(대결/나 탭)
-      options: { redirectTo: location.origin + location.pathname + location.hash },
+      options: { redirectTo: `${location.origin}/` },
     });
     if (error) throw error;
   };

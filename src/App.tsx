@@ -31,6 +31,21 @@ const tabFromHash = (): Tab => {
   const h = location.hash.slice(1) as Tab;
   return TAB_IDS.includes(h) ? h : 'log';
 };
+// 소셜 로그인에서 돌아왔으면 로그인 전에 보던 탭으로
+const initialTab = (): Tab => {
+  try {
+    const saved = sessionStorage.getItem('fitter.returnHash');
+    if (saved !== null && new URLSearchParams(location.search).has('code')) {
+      sessionStorage.removeItem('fitter.returnHash');
+      // 주소(?code=)는 건드리지 않음 → Supabase가 그대로 읽어 로그인 처리
+      const t = saved.slice(1) as Tab;
+      if (TAB_IDS.includes(t)) return t;
+    }
+  } catch {
+    /* noop */
+  }
+  return tabFromHash();
+};
 const todayLabel = () => {
   const d = new Date();
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${WEEK[d.getDay()]}요일`;
@@ -41,7 +56,7 @@ export default function App() {
   // 로그인하면 서버(Supabase), 아니면 이 기기에 저장
   const cloud = useMemo(() => (supabase && auth.session ? new CloudRepo(supabase) : null), [auth.session?.user.id]);
   const w = useWorkout(cloud ?? deviceRepo);
-  const [tab, setTab] = useState<Tab>(tabFromHash);
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [typing, setTyping] = useState(false);
   const [editing, setEditing] = useState<WorkoutLog | null>(null);
   const [sheet, setSheet] = useState<{ open: boolean; routine: Routine }>({ open: false, routine: '가슴·삼두' });
