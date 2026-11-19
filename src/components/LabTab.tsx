@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calculator, Disc3, Loader2, Sparkles, Swords, Watch } from 'lucide-react';
+import { Calculator, Loader2, Sparkles, Swords, Watch } from 'lucide-react';
 import { disablePush, enablePush, pushEnabled, pushSupport, scheduleRestPush } from '../lib/push';
 import { estimate1RM, weightStep } from '../lib/analysis';
 import type { WorkoutLog } from '../lib/types';
 import BattleTab from './BattleTab';
 
-export type LabSub = 'home' | 'battle' | '1rm' | 'plates' | 'alerts';
-export const LAB_TITLES: Record<LabSub, string> = { home: '실험실', battle: '친구 대결', '1rm': '1RM 계산기', plates: '원판 계산기', alerts: '워치 휴식 알림' };
+export type LabSub = 'home' | 'battle' | '1rm' | 'alerts';
+export const LAB_TITLES: Record<LabSub, string> = { home: '실험실', battle: '친구 대결', '1rm': '1RM 계산기', alerts: '워치 휴식 알림' };
 
 interface Props {
   sub: LabSub;
@@ -21,14 +21,12 @@ const TILES: { id: Exclude<LabSub, 'home'> | 'ai'; title: string; desc: string; 
   { id: 'battle', title: '친구 대결', desc: '연속 운동 순위 · 1:1 볼륨 챌린지', Icon: Swords, badge: '사용 중' },
   { id: 'ai', title: 'AI 루틴 코치', desc: '내 기록·인바디로 오늘 루틴 추천', Icon: Sparkles, badge: '사용 중' },
   { id: '1rm', title: '1RM 계산기', desc: '무게 × 횟수로 최대 중량과 % 표', Icon: Calculator, badge: '새 기능' },
-  { id: 'plates', title: '원판 계산기', desc: '목표 무게에 끼울 원판 조합', Icon: Disc3, badge: '새 기능' },
   { id: 'alerts', title: '워치 휴식 알림', desc: '휴식이 끝나면 애플워치·잠금화면으로 알림', Icon: Watch, badge: '새 기능' },
 ];
 
 export default function LabTab({ sub, onSub, onAskAi, logs, customExercises, toast }: Props) {
   if (sub === 'battle') return <BattleTab toast={toast} customExercises={customExercises} />;
   if (sub === '1rm') return <OneRm logs={logs} />;
-  if (sub === 'plates') return <Plates />;
   if (sub === 'alerts') return <Alerts toast={toast} />;
   return (
     <div className="space-y-4">
@@ -150,87 +148,6 @@ function OneRm({ logs }: { logs: WorkoutLog[] }) {
           ))}
         </div>
       </section>
-    </div>
-  );
-}
-
-/* ── 원판 계산기 ── */
-const PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
-const PLATE_STYLE: Record<number, { h: number; w: number; c: string }> = {
-  25: { h: 112, w: 20, c: 'bg-accent' },
-  20: { h: 112, w: 18, c: 'bg-[#2563EB]' },
-  15: { h: 100, w: 16, c: 'bg-[#CA8A04]' },
-  10: { h: 88, w: 14, c: 'bg-up' },
-  5: { h: 70, w: 12, c: 'bg-ink' },
-  2.5: { h: 58, w: 10, c: 'bg-sub' },
-  1.25: { h: 48, w: 8, c: 'bg-sub/60' },
-};
-const BARS = [
-  { w: 20, label: '바벨 20' },
-  { w: 15, label: '여성용 15' },
-  { w: 10, label: 'EZ바 10' },
-  { w: 0, label: '머신 0' },
-];
-
-function Plates() {
-  const [target, setTarget] = useState(100);
-  const [bar, setBar] = useState(20);
-
-  const { side, rest } = useMemo(() => {
-    let left = Math.max(0, (target - bar) / 2);
-    const out: number[] = [];
-    for (const p of PLATES)
-      while (left + 1e-9 >= p) {
-        out.push(p);
-        left -= p;
-      }
-    return { side: out, rest: Math.round(left * 2 * 100) / 100 };
-  }, [target, bar]);
-
-  const grouped = PLATES.map((p) => ({ p, n: side.filter((x) => x === p).length })).filter((g) => g.n);
-
-  return (
-    <div className="space-y-6">
-      <Big label="목표 무게 (전체)" unit="kg" kind="weight" value={target} onChange={setTarget} />
-      <div>
-        <h2 className="section-label">바 무게</h2>
-        <div className="grid grid-cols-4 bg-fill rounded-[12px] p-[3px]" role="radiogroup" aria-label="바 무게">
-          {BARS.map((b) => (
-            <button
-              key={b.w}
-              role="radio"
-              aria-checked={bar === b.w}
-              onClick={() => setBar(b.w)}
-              className={`h-11 rounded-[9px] text-[14px] transition-all ${bar === b.w ? 'bg-seg font-semibold shadow-[0_1px_3px_rgba(0,0,0,.12)]' : 'font-medium text-sub'}`}
-            >
-              {b.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <section className="group-card px-4 py-5" aria-label="한쪽 원판">
-        <div className="caption">한쪽에 끼울 원판</div>
-        {/* 바 그림: 가운데 손잡이 → 바깥으로 무거운 원판부터 */}
-        <div className="flex items-center h-[124px] mt-3" aria-hidden>
-          <div className="w-10 h-3 rounded-l-full bg-sub/40" />
-          <div className="w-2 h-8 rounded-sm bg-sub/60" />
-          {side.map((p, i) => (
-            <div key={i} className={`${PLATE_STYLE[p].c} rounded-[3px] mx-[1px] shrink-0`} style={{ height: PLATE_STYLE[p].h, width: PLATE_STYLE[p].w }} />
-          ))}
-          <div className="flex-1 h-3 rounded-r-full bg-sub/40" />
-        </div>
-        {grouped.length ? (
-          <p className="text-[20px] font-bold mt-3">
-            {grouped.map((g) => `${g.p}kg${g.n > 1 ? ` × ${g.n}` : ''}`).join(' · ')}
-          </p>
-        ) : (
-          <p className="text-[17px] font-semibold mt-3 text-sub">원판 없이 바만</p>
-        )}
-        {rest > 0 && <p className="text-[14px] text-down mt-1">{rest}kg은 원판으로 맞출 수 없어요. 가장 가까운 무게는 {target - rest}kg예요.</p>}
-        {target < bar && <p className="text-[14px] text-down mt-1">목표가 바 무게보다 가벼워요.</p>}
-      </section>
-      <p className="px-1 text-[13px] text-sub">원판: 25 · 20 · 15 · 10 · 5 · 2.5 · 1.25kg 기준</p>
     </div>
   );
 }
