@@ -12,9 +12,11 @@
    - Database password는 따로 적어 두세요.
 2. 왼쪽 **SQL Editor** → **New query** → 이 저장소의 `supabase/migrations/0001_init.sql` 내용을 통째로 붙여넣고 **Run**
    - 표·권한·함수와 인바디 파일 보관함(`inbody` 버킷)이 한 번에 만들어집니다.
-3. **Project Settings → API** 에서 두 값을 복사해 둡니다.
-   - `Project URL` → `VITE_SUPABASE_URL`
-   - `anon public` 키 → `VITE_SUPABASE_ANON_KEY`
+3. 두 값을 복사해 둡니다.
+   - **Project URL** (`https://xxxx.supabase.co`): 화면 위쪽 **Connect** 버튼, 또는 Project Settings → **Data API** → `VITE_SUPABASE_URL`
+   - **Publishable key** (`sb_publishable_...`): Project Settings → **API Keys** → `VITE_SUPABASE_ANON_KEY`
+     (예전 화면의 `anon public` 키와 같은 역할이에요)
+   - **Secret key(`sb_secret_...`)는 쓰지 않아요.** 앱이나 환경 변수에 넣지 말고 누구에게도 보여 주지 마세요.
 4. **Authentication → URL Configuration**
    - Site URL: Vercel 주소 (예: `https://fitter-xxxx.vercel.app`)
    - Redirect URLs: 같은 주소 + `http://localhost:5173` 추가
@@ -66,7 +68,7 @@ Vercel → 프로젝트 → **Settings → Environment Variables** 에 추가:
 | 이름 | 값 | 비고 |
 |---|---|---|
 | `VITE_SUPABASE_URL` | 1-3의 Project URL | 앱·서버 공용 |
-| `VITE_SUPABASE_ANON_KEY` | 1-3의 anon 키 | 공개돼도 되는 키 (권한은 DB 규칙이 막음) |
+| `VITE_SUPABASE_ANON_KEY` | 1-3의 Publishable key (`sb_publishable_...`) | 공개돼도 되는 키 (권한은 DB 규칙이 막음) |
 | `ANTHROPIC_API_KEY` | 4의 키 | **서버 전용. 절대 `VITE_`를 붙이지 마세요** (앱에 노출됨) |
 
 저장 후 **Deployments → 최신 배포 → Redeploy** 하면 적용됩니다.
