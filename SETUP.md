@@ -10,8 +10,10 @@
 1. https://supabase.com 가입 → **New project**
    - Region: **Northeast Asia (Seoul)**
    - Database password는 따로 적어 두세요.
-2. 왼쪽 **SQL Editor** → **New query** → 이 저장소의 `supabase/migrations/0001_init.sql` 내용을 통째로 붙여넣고 **Run**
-   - 표·권한·함수와 인바디 파일 보관함(`inbody` 버킷)이 한 번에 만들어집니다.
+2. 왼쪽 **SQL Editor** → **New query** → 아래 두 파일을 **순서대로** 각각 통째로 붙여넣고 **Run**
+   - `supabase/migrations/0001_init.sql`: 표·보안 규칙·함수, 인바디 파일 보관함(`inbody` 버킷)
+   - `supabase/migrations/0002_grants.sql`: 앱이 표에 접근할 권한
+     (빠뜨리면 로그인 후 "permission denied for table ..." 오류가 나요)
 3. 두 값을 복사해 둡니다.
    - **Project URL** (`https://xxxx.supabase.co`): 화면 위쪽 **Connect** 버튼, 또는 Project Settings → **Data API** → `VITE_SUPABASE_URL`
    - **Publishable key** (`sb_publishable_...`): Project Settings → **API Keys** → `VITE_SUPABASE_ANON_KEY`
