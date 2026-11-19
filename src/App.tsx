@@ -8,6 +8,7 @@ import HistoryList from './components/HistoryList';
 import Dashboard from './components/Dashboard';
 import AddExerciseSheet from './components/AddExerciseSheet';
 import Toast from './components/Toast';
+import Splash from './components/Splash';
 import type { CustomExercise, Routine, WorkoutLog } from './lib/types';
 
 type Tab = 'log' | 'history' | 'stats';
@@ -30,6 +31,7 @@ export default function App() {
   const [sheet, setSheet] = useState<{ open: boolean; routine: Routine }>({ open: false, routine: '가슴·삼두' });
   const [pending, setPending] = useState<CustomExercise | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!toast) return;
@@ -45,13 +47,15 @@ export default function App() {
   };
 
   return (
+    <>
+    <Splash onDone={() => setReady(true)} />
     <div className="min-h-screen pb-[calc(88px+env(safe-area-inset-bottom))]">
-      <header className="max-w-md mx-auto px-5 pt-[max(env(safe-area-inset-top),16px)] pb-5">
-        <div className="flex items-center justify-between h-8">
-          <span className="font-display text-[19px] font-bold tracking-[0.18em]">FITTER</span>
-          {w.loading && <Loader2 aria-label="불러오는 중" className="w-[18px] h-[18px] animate-spin text-sub" />}
+      <div className={ready ? 'app-enter' : 'opacity-0'}>
+      <header className="max-w-md mx-auto px-5 pt-[max(env(safe-area-inset-top),20px)] pb-5">
+        <div className="flex items-center gap-2 h-5">
+          <p className="caption">{tab === 'log' ? todayLabel() : `총 ${w.logs.length}개 기록`}</p>
+          {w.loading && <Loader2 aria-label="불러오는 중" className="w-3.5 h-3.5 animate-spin text-sub" />}
         </div>
-        <p className="caption mt-5">{tab === 'log' ? todayLabel() : `총 ${w.logs.length}개 기록`}</p>
         <div className="flex items-end justify-between">
           <h1 className="text-[34px] font-bold leading-tight tracking-[-0.02em]">{TITLES[tab]}</h1>
           {tab === 'log' && (
@@ -109,8 +113,9 @@ export default function App() {
 
         {tab === 'stats' && <Dashboard logs={w.logs} />}
       </main>
+      </div>
 
-      <nav aria-label="주 메뉴" className="fixed bottom-0 inset-x-0 z-50 bg-bg/85 backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_var(--sep)] pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="주 메뉴" className={`${ready ? 'app-fade' : 'opacity-0'} fixed bottom-0 inset-x-0 z-50 bg-bg/85 backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_var(--sep)] pb-[env(safe-area-inset-bottom)]`}>
         <div className="max-w-md mx-auto grid grid-cols-3 h-[56px]">
           {TABS.map(({ id, label, Icon }) => {
             const on = tab === id;
@@ -142,5 +147,6 @@ export default function App() {
       />
       <Toast msg={toast} />
     </div>
+    </>
   );
 }
