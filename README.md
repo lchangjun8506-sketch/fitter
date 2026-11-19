@@ -15,6 +15,8 @@ npm run build      # dist/ 에 배포용 결과물 생성
 - 운동 기록(세트·드롭세트), 휴식 타이머, 점진적 과부하 코칭, 성장 분석
 - **로그인**: 카카오·구글 → `닉네임-0000` 아이디 발급
 - **대결**: 친구 추가, 연속 운동 순위, 1:1 볼륨 챌린지(3/7/14일)
+- **오늘의 추천 루틴**: 가장 오래 쉰 부위와 지난 기록으로 목표 무게·횟수 추천(무료), 원하면 AI에게 자세히 묻기(Claude, 유료·선택)
+- **MY 대시보드**: 이번 주 현황, 부위 밸런스, 최근 신기록, 인바디 몸 상태 요약 + 히스토리
 - **인바디**: 결과지 사진·PDF를 올리면 휴대폰에서 바로 수치를 읽어 기록(무료, 사진이 외부로 나가지 않음), 이전 측정과 비교
 
 서버(Supabase) 연결 방법은 **[SETUP.md](SETUP.md)** 를 보세요. 연결 전에도 기록 기능은 이 기기 저장으로 동작합니다.
@@ -48,8 +50,11 @@ src/
   lib/auth.tsx            로그인 상태, 닉네임 발급
   lib/social.ts           친구·스트릭·챌린지 (Supabase RPC)
   lib/inbody.ts           인바디 기록 저장·조회
+  lib/recommend.ts        오늘의 추천 루틴 (규칙 기반, 기기 안에서)
+  lib/aiRoutine.ts        AI 추천 요청 (요약 데이터만 전송)
   lib/ocr.ts              결과지 판독 (PDF 글자 추출 + 사진 글자 인식, 기기 안에서)
-supabase/migrations/      DB 스키마·권한·함수 (SQL Editor에 붙여넣기)
+api/routine.ts            AI 루틴 추천 서버 함수 (Vercel, Claude Haiku)
+supabase/migrations/      DB 스키마·권한·함수 (SQL Editor에 순서대로 붙여넣기)
   lib/analysis.ts         볼륨·1RM·코칭 팁·정체 판정 로직
   lib/useWorkout.ts       데이터 로딩/저장 훅
   data/exercises.ts       루틴별 기본 종목

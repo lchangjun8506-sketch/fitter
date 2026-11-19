@@ -14,6 +14,7 @@
    - `supabase/migrations/0001_init.sql`: 표·보안 규칙·함수, 인바디 파일 보관함(`inbody` 버킷)
    - `supabase/migrations/0002_grants.sql`: 앱이 표에 접근할 권한
      (빠뜨리면 로그인 후 "permission denied for table ..." 오류가 나요)
+   - `supabase/migrations/0003_ai_usage.sql`: AI 루틴 추천 하루 사용 횟수 기록용 표
 3. 두 값을 복사해 둡니다.
    - **Project URL** (`https://xxxx.supabase.co`): 화면 위쪽 **Connect** 버튼, 또는 Project Settings → **Data API** → `VITE_SUPABASE_URL`
    - **Publishable key** (`sb_publishable_...`): Project Settings → **API Keys** → `VITE_SUPABASE_ANON_KEY`
@@ -85,10 +86,21 @@ Vercel → 프로젝트 → **Settings → Environment Variables** 에 추가:
 |---|---|---|
 | `VITE_SUPABASE_URL` | 1-3의 Project URL | 앱·서버 공용 |
 | `VITE_SUPABASE_ANON_KEY` | 1-3의 Publishable key (`sb_publishable_...`) | 공개돼도 되는 키 (권한은 DB 규칙이 막음) |
+| `ANTHROPIC_API_KEY` | Claude API 키 (console.anthropic.com → API Keys) | **AI 루틴 추천용, 서버 전용. `VITE_`를 붙이지 마세요.** 없으면 무료 기본 추천만 동작 |
 
 저장 후 **Deployments → 최신 배포 → Redeploy** 하면 적용됩니다.
 
 ---
+
+## AI 루틴 추천 (선택)
+
+- 기록 탭의 **오늘의 추천 루틴**은 무료로 휴대폰에서 계산돼요. 설정이 필요 없어요.
+- **AI에게 자세히 묻기**를 쓰려면:
+  1. https://console.anthropic.com 가입 → Billing에서 크레딧 충전 (최소 5달러)
+  2. API Keys → Create Key → Vercel 환경 변수 `ANTHROPIC_API_KEY`에 넣고 Redeploy
+  3. Supabase에서 `0003_ai_usage.sql` 실행
+- 가벼운 모델(Claude Haiku)을 써서 한 번에 약 1~2원, 계정당 하루 5번까지예요 (`api/routine.ts`의 `DAILY_LIMIT`).
+- AI에는 최근 45일 종목별 핵심 수치와 최근 인바디 2회만 보내요. 메모·사진은 보내지 않아요.
 
 ## 확인 순서
 

@@ -40,7 +40,8 @@ interface Props {
   onSave: (log: NewLog, id?: string) => void;
   onCancelEdit: () => void;
   onOpenAddExercise: (routine: Routine) => void;
-  pendingExercise: CustomExercise | null;
+  /** 추천 루틴·종목 추가에서 넘어온 종목 (sets가 있으면 그 목표로 채움) */
+  pendingExercise: (CustomExercise & { sets?: WorkoutSet[] }) | null;
 }
 
 export default function LogForm({ logs, custom, editing, busy, onSave, onCancelEdit, onOpenAddExercise, pendingExercise }: Props) {
@@ -95,7 +96,18 @@ export default function LogForm({ logs, custom, editing, busy, onSave, onCancelE
   }, [editing]);
 
   useEffect(() => {
-    if (pendingExercise) pickExercise(pendingExercise.exercise, pendingExercise.routine);
+    if (!pendingExercise) return;
+    pickExercise(pendingExercise.exercise, pendingExercise.routine);
+    if (pendingExercise.sets?.length) {
+      setRows(
+        pendingExercise.sets.map((s) => ({
+          weight: s.weight ? String(s.weight) : '',
+          reps: String(s.reps),
+          drops: (s.drops ?? []).map((d) => ({ weight: String(d.weight), reps: String(d.reps) })),
+        })),
+      );
+    }
+    document.getElementById('log-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingExercise]);
 
@@ -121,7 +133,7 @@ export default function LogForm({ logs, custom, editing, busy, onSave, onCancelE
   const volume = setVolume(sets);
 
   return (
-    <div className="space-y-6">
+    <div id="log-form" className="space-y-6 scroll-mt-4">
       {editing && (
         <div className="group-card row justify-between">
           <span className="text-[15px] font-semibold">기록 수정 중</span>

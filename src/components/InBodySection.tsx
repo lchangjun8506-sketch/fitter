@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { FileText, Loader2, ScanLine, Trash2 } from 'lucide-react';
-import { INBODY_FIELDS, deleteInBody, listInBody, openInBodyFile, prepareFile, saveInBody, type InBodyRecord, type InBodyValues } from '../lib/inbody';
+import { INBODY_FIELDS, deleteInBody, openInBodyFile, prepareFile, saveInBody, type InBodyRecord, type InBodyValues } from '../lib/inbody';
 import { readInBody } from '../lib/ocr';
 import { errText } from '../lib/supabase';
 import { prettyDate, todayStr } from '../lib/date';
@@ -29,8 +29,13 @@ function Delta({ now, prev, goodUp }: { now: number | null; prev: number | null;
   return <span className={`text-[12px] font-semibold ${good ? 'text-up' : 'text-down'}`}>{d > 0 ? '▲' : '▼'} {Math.abs(d)}</span>;
 }
 
-export default function InBodySection({ toast }: { toast: (m: string) => void }) {
-  const [records, setRecords] = useState<InBodyRecord[]>([]);
+interface Props {
+  toast: (m: string) => void;
+  records: InBodyRecord[];
+  reload: () => void;
+}
+
+export default function InBodySection({ toast, records, reload: load }: Props) {
   const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
@@ -40,10 +45,6 @@ export default function InBodySection({ toast }: { toast: (m: string) => void })
   const file = useRef<{ blob: Blob; ext: string } | undefined>();
   const input = useRef<HTMLInputElement>(null);
 
-  const load = useCallback(() => listInBody().then(setRecords).catch((e) => toast(errText(e))), [toast]);
-  useEffect(() => {
-    load();
-  }, [load]);
 
   const onPick = async (f: File | undefined) => {
     if (!f) return;
