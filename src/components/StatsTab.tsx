@@ -4,6 +4,8 @@ import type { WorkoutLog } from '../lib/types';
 import Segmented from './Segmented';
 import Dashboard from './Dashboard';
 import InBodySection from './InBodySection';
+import BodyInsights from './BodyInsights';
+import type { BodyGoal } from '../lib/body';
 import LoginPanel from './LoginPanel';
 import NicknameForm from './NicknameForm';
 
@@ -16,9 +18,11 @@ interface Props {
   inbody: InBodyRecord[];
   reloadInBody: () => void;
   toast: (m: string) => void;
+  goal: BodyGoal | null;
+  saveGoal: (g: BodyGoal | null) => Promise<void>;
 }
 
-export default function StatsTab({ sub, onSub, logs, inbody, reloadInBody, toast }: Props) {
+export default function StatsTab({ sub, onSub, logs, inbody, reloadInBody, toast, goal, saveGoal }: Props) {
   const { ready, session, handle } = useAuth();
   return (
     <div className="space-y-6">
@@ -30,7 +34,10 @@ export default function StatsTab({ sub, onSub, logs, inbody, reloadInBody, toast
       ) : !handle ? (
         <NicknameForm />
       ) : (
-        <InBodySection toast={toast} records={inbody} reload={reloadInBody} />
+        <>
+          <BodyInsights records={inbody} logs={logs} goal={goal} saveGoal={saveGoal} />
+          <InBodySection toast={toast} records={inbody} reload={reloadInBody} />
+        </>
       )}
     </div>
   );

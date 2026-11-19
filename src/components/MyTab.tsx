@@ -7,6 +7,8 @@ import { dayStr, estimate1RM, setVolume, streakOf } from '../lib/analysis';
 import { prettyDate } from '../lib/date';
 import { ROUTINES } from '../data/exercises';
 import type { InBodyRecord } from '../lib/inbody';
+import { goalStatuses, monthDay, type BodyGoal } from '../lib/body';
+import { GoalBar } from './BodyInsights';
 import type { CustomExercise, WorkoutLog } from '../lib/types';
 import ImportSheet from './ImportSheet';
 import Segmented from './Segmented';
@@ -23,6 +25,7 @@ interface Props {
   logs: WorkoutLog[];
   custom: CustomExercise[];
   inbody: InBodyRecord[];
+  goal: BodyGoal | null;
   cloud: CloudRepo | null;
   toast: (m: string) => void;
   onImported: () => void;
@@ -39,7 +42,7 @@ function Delta({ v, unit = '', goodUp = true }: { v: number | null; unit?: strin
   return <span className={`text-[12px] font-semibold ${good ? 'text-up' : 'text-down'}`}>{r > 0 ? '▲' : '▼'} {Math.abs(r)}{unit}</span>;
 }
 
-function Dashboard({ logs, inbody, onOpenInBody }: Pick<Props, 'logs' | 'inbody' | 'onOpenInBody'>) {
+function Dashboard({ logs, inbody, goal, onOpenInBody }: Pick<Props, 'logs' | 'inbody' | 'goal' | 'onOpenInBody'>) {
   const stats = useMemo(() => {
     // 이번 주(월~오늘) vs 지난주 같은 기간
     const now = new Date();
@@ -89,6 +92,7 @@ function Dashboard({ logs, inbody, onOpenInBody }: Pick<Props, 'logs' | 'inbody'
 
   const [latest, prev] = inbody;
   const first = inbody[inbody.length - 1];
+  const st = useMemo(() => (goal && inbody.length ? goalStatuses(goal, inbody) : null), [goal, inbody]);
 
   return (
     <div className="space-y-6">
@@ -181,6 +185,15 @@ function Dashboard({ logs, inbody, onOpenInBody }: Pick<Props, 'logs' | 'inbody'
                     `, 체지방률 ${latest.body_fat_pct - first.body_fat_pct >= 0 ? '+' : ''}${Math.round((latest.body_fat_pct - first.body_fat_pct) * 10) / 10}%p`}
                 </p>
               )}
+              {st && (st.fat || st.muscle) ? (
+                <div className="px-4 pb-2.5 pt-1 shadow-[inset_0_1px_0_var(--sep)]" aria-label="내 목표">
+                  <div className="pt-2.5 text-[13px] text-sub">목표 · {monthDay(goal!.targetDate)}까지</div>
+                  {st.fat && <GoalBar s={st.fat} color="bg-accent" compact />}
+                  {st.muscle && <GoalBar s={st.muscle} color="bg-ink" compact />}
+                </div>
+              ) : (
+                <p className="px-4 py-3 text-[13px] font-semibold text-accent shadow-[inset_0_1px_0_var(--sep)]">체지방률·근육 목표 정하기 ›</p>
+              )}
             </>
           ) : (
             <div className="row justify-between py-3.5">
@@ -264,7 +277,7 @@ export default function MyTab(p: Props) {
       <Segmented<MySub> label="MY 메뉴" value={p.sub} onChange={p.onSub} options={[{ id: 'dash', label: '대시보드' }, { id: 'history', label: '히스토리' }]} />
       {p.sub === 'dash' ? (
         <>
-          <Dashboard logs={p.logs} inbody={p.inbody} onOpenInBody={p.onOpenInBody} />
+          <Dashboard logs={p.logs} inbody={p.inbody} goal={p.goal} onOpenInBody={p.onOpenInBody} />
           <Account cloud={p.cloud} toast={p.toast} onImported={p.onImported} logs={p.logs} custom={p.custom} />
         </>
       ) : (

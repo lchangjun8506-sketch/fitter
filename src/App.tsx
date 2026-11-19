@@ -11,6 +11,7 @@ import TodayPanel from './components/RoutineCard';
 import ExerciseSheet, { type ExerciseTarget } from './components/ExerciseSheet';
 import ExercisePicker from './components/ExercisePicker';
 import { useInBody } from './lib/useInBody';
+import { useBodyGoal } from './lib/body';
 import RestPill from './components/RestTimer';
 import { useRest } from './lib/rest';
 import AddExerciseSheet from './components/AddExerciseSheet';
@@ -85,6 +86,7 @@ export default function App() {
   const cloud = useMemo(() => (supabase && auth.session ? new CloudRepo(supabase) : null), [auth.session?.user.id]);
   const w = useWorkout(cloud ?? deviceRepo);
   const inbody = useInBody(auth.session?.user.id);
+  const body = useBodyGoal(auth.session);
   const [route, setRoute] = useState<Route>(initialRoute);
   const tab = route.tab;
   const [typing, setTyping] = useState(false);
@@ -229,6 +231,11 @@ export default function App() {
             inbody={inbody.records}
             reloadInBody={inbody.reload}
             toast={setToast}
+            goal={body.goal}
+            saveGoal={async (g) => {
+              await body.save(g);
+              setToast(g ? '목표를 저장했어요' : '목표를 지웠어요');
+            }}
           />
         )}
 
@@ -239,6 +246,7 @@ export default function App() {
             logs={w.logs}
             custom={w.custom}
             inbody={inbody.records}
+            goal={body.goal}
             cloud={cloud}
             toast={setToast}
             onImported={() => w.refresh()}
