@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FileText, Loader2, ScanLine, Trash2 } from 'lucide-react';
-import { INBODY_FIELDS, deleteInBody, listInBody, openInBodyFile, prepareFile, saveInBody, scanInBody, type InBodyRecord, type InBodyValues } from '../lib/inbody';
+import { INBODY_FIELDS, deleteInBody, listInBody, openInBodyFile, prepareFile, saveInBody, type InBodyRecord, type InBodyValues } from '../lib/inbody';
+import { readInBody } from '../lib/ocr';
 import { errText } from '../lib/supabase';
 import { prettyDate, todayStr } from '../lib/date';
 import Sheet from './Sheet';
@@ -31,6 +32,9 @@ function Delta({ now, prev, goodUp }: { now: number | null; prev: number | null;
 export default function InBodySection({ toast }: { toast: (m: string) => void }) {
   const [records, setRecords] = useState<InBodyRecord[]>([]);
   const [scanning, setScanning] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
   const file = useRef<{ blob: Blob; ext: string } | undefined>();
@@ -44,11 +48,21 @@ export default function InBodySection({ toast }: { toast: (m: string) => void })
   const onPick = async (f: File | undefined) => {
     if (!f) return;
     setScanning(true);
+    setProgress(0);
     try {
-      const prepared = await prepareFile(f);
-      file.current = prepared;
-      const reading = await scanInBody(prepared.blob, prepared.mediaType);
-      setDraft(toDraft(reading));
+      const result = await readInBody(f, setProgress);
+      file.current = await prepareFile(f);
+      if (preview) URL.revokeObjectURL(preview);
+      setPreview(f.type.startsWith('image/') ? URL.createObjectURL(f) : null);
+      setNotice(
+        result.found === 0
+          ? '값을 읽지 못했어요. 결과지를 보면서 직접 입력해 주세요.'
+          : result.method === 'pdf-text'
+            ? 'PDF에서 읽은 값이에요. 맞는지 한 번 확인해 주세요.'
+            : `${result.found}개 항목을 읽었어요. 사진 인식은 틀릴 수 있으니 결과지와 꼭 비교해 주세요.` +
+              (result.derived.length ? ` (${result.derived.join('·')}는 계산으로 채웠어요)` : ''),
+      );
+      setDraft(toDraft(result.values));
     } catch (e) {
       toast(errText(e));
     } finally {
@@ -66,6 +80,8 @@ export default function InBodySection({ toast }: { toast: (m: string) => void })
         <button
           onClick={() => {
             file.current = undefined;
+            setPreview(null);
+            setNotice(null);
             setDraft(toDraft({} as InBodyValues));
           }}
           className="tap h-9 px-1 pb-2 text-[14px] text-sub"
@@ -84,8 +100,10 @@ export default function InBodySection({ toast }: { toast: (m: string) => void })
           {scanning ? <Loader2 aria-hidden className="w-5 h-5 animate-spin" /> : <ScanLine aria-hidden className="w-5 h-5" strokeWidth={1.75} />}
         </span>
         <span className="flex-1">
-          <span className="block text-[16px] font-semibold">{scanning ? '결과지를 읽는 중이에요…' : '결과지 올리기'}</span>
-          <span className="block text-[13px] text-sub">{scanning ? '10~20초 정도 걸려요' : '사진 또는 PDF를 올리면 수치를 자동으로 읽어요'}</span>
+          <span className="block text-[16px] font-semibold">{scanning ? `결과지를 읽는 중이에요 ${Math.round(progress * 100)}%` : '결과지 올리기'}</span>
+          <span className="block text-[13px] text-sub">
+            {scanning ? (progress < 0.4 ? '처음 한 번은 인식 데이터를 받느라 조금 더 걸려요' : '휴대폰 안에서 읽고 있어요') : '사진 또는 PDF를 올리면 수치를 자동으로 읽어요 · 무료'}
+          </span>
         </span>
       </button>
 
@@ -155,7 +173,12 @@ export default function InBodySection({ toast }: { toast: (m: string) => void })
       >
         {draft && (
           <>
-            {file.current && <p className="px-1 text-[14px] text-sub">자동으로 읽은 값이에요. 결과지와 다르면 고쳐 주세요.</p>}
+            {notice && <p className="px-1 text-[14px] text-sub leading-relaxed">{notice}</p>}
+            {preview && (
+              <a href={preview} target="_blank" rel="noreferrer" className="block group-card !bg-elevcard">
+                <img src={preview} alt="올린 결과지" className="w-full max-h-[40dvh] object-contain" />
+              </a>
+            )}
             <div className="group-card !bg-elevcard">
               <div className="row justify-between">
                 <span className="text-[16px]">측정일</span>

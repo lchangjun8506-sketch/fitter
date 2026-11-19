@@ -28,21 +28,12 @@ export const INBODY_FIELDS: { key: keyof Omit<InBodyValues, 'measured_at'>; labe
   { key: 'inbody_score', label: '인바디 점수', unit: '점' },
 ];
 
-const toBase64 = (blob: Blob) =>
-  new Promise<string>((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result).split(',')[1]);
-    r.onerror = () => reject(r.error);
-    r.readAsDataURL(blob);
-  });
-
 /**
- * 사진은 긴 변 2000px JPEG로 줄여 올린다 (서버 4.5MB 제한, 업로드 속도).
- * 아이폰 HEIC는 사파리가 사진 선택 시 JPEG로 바꿔 주고, 혹시 남아 있어도 캔버스로 다시 그리면서 JPEG가 된다.
+ * 원본 보관용: 사진은 긴 변 2000px JPEG로 줄여 저장 공간·업로드 시간 절약.
+ * 아이폰 HEIC는 캔버스로 다시 그리면서 JPEG가 된다.
  */
 export async function prepareFile(file: File): Promise<{ blob: Blob; mediaType: string; ext: string }> {
   if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-    if (file.size > 3_000_000) throw new Error('PDF는 3MB 이하만 올릴 수 있어요');
     return { blob: file, mediaType: 'application/pdf', ext: 'pdf' };
   }
   const bitmap = await createImageBitmap(file).catch(() => {
@@ -55,19 +46,6 @@ export async function prepareFile(file: File): Promise<{ blob: Blob; mediaType: 
   canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   const blob = await new Promise<Blob>((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error('변환 실패'))), 'image/jpeg', 0.88));
   return { blob, mediaType: 'image/jpeg', ext: 'jpg' };
-}
-
-/** 서버(/api/inbody)에서 Claude로 판독 */
-export async function scanInBody(blob: Blob, mediaType: string): Promise<InBodyValues> {
-  const { data } = await supabase!.auth.getSession();
-  const res = await fetch('/api/inbody', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
-    body: JSON.stringify({ data: await toBase64(blob), mediaType }),
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error ?? `분석 실패 (${res.status})`);
-  return body.reading as InBodyValues;
 }
 
 export async function saveInBody(values: InBodyValues & { measured_at: string }, file?: { blob: Blob; ext: string }) {

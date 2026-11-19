@@ -1,16 +1,56 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { readFileSync } from 'node:fs';
+import type { Plugin } from 'vite';
+
+/**
+ * 인바디 글자 인식(OCR) 파일을 외부 CDN 대신 우리 사이트 /ocr/ 에서 제공.
+ * - 사진이 외부로 나가지 않고, 한 번 받으면 폰에 캐시됨
+ */
+const OCR_FILES: Record<string, string> = {
+  'ocr/worker.min.js': 'node_modules/tesseract.js/dist/worker.min.js',
+  'ocr/tesseract-core-simd-lstm.wasm.js': 'node_modules/tesseract.js-core/tesseract-core-simd-lstm.wasm.js',
+  'ocr/tesseract-core-lstm.wasm.js': 'node_modules/tesseract.js-core/tesseract-core-lstm.wasm.js',
+  'ocr/lang/kor.traineddata.gz': 'node_modules/@tesseract.js-data/kor/4.0.0_best_int/kor.traineddata.gz',
+  'ocr/lang/eng.traineddata.gz': 'node_modules/@tesseract.js-data/eng/4.0.0_best_int/eng.traineddata.gz',
+};
+function ocrAssets(): Plugin {
+  return {
+    name: 'fitter-ocr-assets',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const key = req.url?.split('?')[0].replace(/^\//, '') ?? '';
+        const src = OCR_FILES[key];
+        if (!src) return next();
+        res.setHeader('Content-Type', key.endsWith('.gz') ? 'application/octet-stream' : 'text/javascript');
+        res.end(readFileSync(src));
+      });
+    },
+    generateBundle() {
+      for (const [fileName, src] of Object.entries(OCR_FILES)) {
+        this.emitFile({ type: 'asset', fileName, source: readFileSync(src) });
+      }
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     react(),
+    ocrAssets(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png', 'favicon-64.png'],
       workbox: {
-        // 폰트 조각은 처음 쓸 때 받아서 캐시 → 이후 오프라인에서도 동일하게 표시
+        // OCR 파일(수 MB)은 미리 받지 않고, 처음 인바디를 올릴 때 받아서 캐시
+        globIgnores: ['ocr/**'],
         runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/ocr/'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'ocr', expiration: { maxEntries: 10 } },
+          },
           {
             urlPattern: ({ request }) => request.destination === 'font',
             handler: 'CacheFirst',
