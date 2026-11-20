@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { FileText, Loader2, ScanLine, Trash2 } from 'lucide-react';
 import { INBODY_FIELDS, deleteInBody, openInBodyFile, prepareFile, saveInBody, type InBodyRecord, type InBodyValues } from '../lib/inbody';
-import { readInBody } from '../lib/ocr';
+import { scanInBody } from '../lib/inbodyScan';
 import { errText } from '../lib/supabase';
 import { prettyDate, todayStr } from '../lib/date';
 import Sheet from './Sheet';
@@ -37,7 +37,6 @@ interface Props {
 
 export default function InBodySection({ toast, records, reload: load }: Props) {
   const [scanning, setScanning] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -49,21 +48,24 @@ export default function InBodySection({ toast, records, reload: load }: Props) {
   const onPick = async (f: File | undefined) => {
     if (!f) return;
     setScanning(true);
-    setProgress(0);
+    if (preview) URL.revokeObjectURL(preview);
     try {
-      const result = await readInBody(f, setProgress);
       file.current = await prepareFile(f);
-      if (preview) URL.revokeObjectURL(preview);
       setPreview(f.type.startsWith('image/') ? URL.createObjectURL(f) : null);
-      setNotice(
-        result.found === 0
-          ? '값을 읽지 못했어요. 결과지를 보면서 직접 입력해 주세요.'
-          : result.method === 'pdf-text'
-            ? 'PDF에서 읽은 값이에요. 맞는지 한 번 확인해 주세요.'
-            : `${result.found}개 항목을 읽었어요. 사진 인식은 틀릴 수 있으니 결과지와 꼭 비교해 주세요.` +
-              (result.derived.length ? ` (${result.derived.join('·')}는 계산으로 채웠어요)` : ''),
-      );
-      setDraft(toDraft(result.values));
+      try {
+        const result = await scanInBody(f);
+        setNotice(
+          result.found === 0
+            ? 'AI가 값을 찾지 못했어요. 결과지를 보면서 직접 입력해 주세요.'
+            : `AI가 ${result.found}개 항목을 읽었어요. 저장 전에 결과지와 한 번 비교해 주세요.` +
+                (result.derived.length ? ` (계산으로 채운 항목: ${result.derived.join('·')})` : ''),
+        );
+        setDraft(toDraft(result.values));
+      } catch (e) {
+        // AI가 못 읽어도 올린 파일은 그대로 두고 직접 입력으로
+        setNotice(`${errText(e)} 결과지를 보면서 직접 입력해 주세요.`);
+        setDraft(toDraft({} as InBodyValues));
+      }
     } catch (e) {
       toast(errText(e));
     } finally {
@@ -101,12 +103,13 @@ export default function InBodySection({ toast, records, reload: load }: Props) {
           {scanning ? <Loader2 aria-hidden className="w-5 h-5 animate-spin" /> : <ScanLine aria-hidden className="w-5 h-5" strokeWidth={1.75} />}
         </span>
         <span className="flex-1">
-          <span className="block text-[16px] font-semibold">{scanning ? `결과지를 읽는 중이에요 ${Math.round(progress * 100)}%` : '결과지 올리기'}</span>
+          <span className="block text-[16px] font-semibold">{scanning ? 'AI가 결과지를 읽는 중이에요' : '결과지 올리기 · AI 스캔'}</span>
           <span className="block text-[13px] text-sub">
-            {scanning ? (progress < 0.4 ? '처음 한 번은 인식 데이터를 받느라 조금 더 걸려요' : '휴대폰 안에서 읽고 있어요') : '사진 또는 PDF를 올리면 수치를 자동으로 읽어요 · 무료'}
+            {scanning ? '보통 5~10초 걸려요' : '사진 또는 PDF를 올리면 AI가 수치를 읽어요 · 하루 10번'}
           </span>
         </span>
       </button>
+      <p className="px-4 pt-1.5 text-[12px] text-sub leading-relaxed">올린 결과지는 수치를 읽기 위해 Google Gemini로 전송돼요. 원본은 내 계정에만 보관돼요.</p>
 
       {latest && (
         <div className="group-card mt-3">

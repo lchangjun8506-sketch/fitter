@@ -93,6 +93,14 @@ Vercel → 프로젝트 → **Settings → Environment Variables** 에 추가:
 
 ---
 
+## 인바디 AI 스캔 (Gemini) 설정
+
+1. https://aistudio.google.com 에 구글 계정으로 로그인 → **Get API key** → **Create API key**
+2. Vercel → 프로젝트 → Settings → Environment Variables → `GEMINI_API_KEY`에 붙여넣기 (Production, **Sensitive** 권장, `VITE_`를 붙이지 마세요)
+3. (선택) 모델을 바꾸려면 `GEMINI_MODEL` (기본 `gemini-3.8-flash`)
+4. Redeploy
+- 무료 등급은 보낸 데이터가 구글 서비스 개선에 쓰일 수 있어요. 결제를 등록한 유료 등급은 보통 그렇지 않아요. 정확한 조건은 Gemini API 가격 페이지의 "Used to improve our products" 줄에서 확인하세요.
+
 ## AI 루틴 추천 (선택)
 
 - 기록 탭의 **오늘의 추천 루틴**은 무료로 휴대폰에서 계산돼요. 설정이 필요 없어요.
@@ -128,10 +136,9 @@ Vercel → 프로젝트 → **Settings → Environment Variables** 에 추가:
 - **친구가 볼 수 있는 정보**
   - 보이는 것: 아이디, 연속 운동 일수, 최근 7일 운동 일수, 챌린지 기간의 볼륨 합계뿐이에요.
   - 세트 내용, 메모, 인바디는 본인만 볼 수 있어요.
-- **인바디 판독은 무료**
-  - 결과지는 휴대폰 안에서 글자 인식으로 읽어요. 사진이 외부 AI 서버로 가지 않고, 비용도 없어요.
-  - 인바디 앱(LookinBody)에서 받은 PDF는 거의 정확하게 읽어요.
-  - 사진은 기울기·빛 반사에 따라 일부 칸을 못 읽을 수 있어요. 확인 화면에서 사진을 보며 빈칸을 채워 주세요.
-  - 처음 한 번은 인식 데이터(약 8MB)를 받느라 조금 더 걸려요.
+- **인바디 판독은 AI(Google Gemini)**
+  - 올린 결과지(사진·PDF)를 Gemini가 읽어 수치를 채워요. 사진은 긴 변 1600px로 줄여서 보내요.
+  - 계정당 하루 10번까지예요 (`api/inbody-scan.ts`의 `DAILY_LIMIT`, 사용 기록은 0003의 ai_usage 표).
+  - 못 읽으면 직접 입력 화면으로 넘어가요. 저장 전 확인 화면에서 결과지와 비교해 주세요.
 - **인바디 원본 파일**
   - 비공개 보관함에 본인 폴더로 저장되고, 볼 때마다 60초짜리 임시 링크로 열려요.

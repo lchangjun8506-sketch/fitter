@@ -52,7 +52,7 @@ src/
   lib/inbody.ts           인바디 기록 저장·조회
   lib/recommend.ts        오늘의 추천 루틴 (규칙 기반, 기기 안에서)
   lib/aiRoutine.ts        AI 추천 요청 (요약 데이터만 전송)
-  lib/ocr.ts              결과지 판독 (PDF 글자 추출 + 사진 글자 인식, 기기 안에서)
+  lib/inbodyScan.ts       결과지 AI 스캔 (Gemini, api/inbody-scan.ts 경유)
 api/routine.ts            AI 루틴 추천 서버 함수 (Vercel, Claude Haiku)
 supabase/migrations/      DB 스키마·권한·함수 (SQL Editor에 순서대로 붙여넣기)
   lib/analysis.ts         볼륨·1RM·코칭 팁·정체 판정 로직
