@@ -7,7 +7,7 @@
  */
 import { checkUser, geminiJson, json } from './_gemini.js';
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const DAILY_LIMIT = 5;
 const MAX_INPUT = 20_000;
@@ -22,14 +22,14 @@ const SCHEMA = {
     warmup: { type: 'string', description: '준비운동 한 문장' },
     items: {
       type: 'array',
-      description: '4~6개 종목',
+      description: '종목 목록. 기본 4~6개, 사용자가 개수를 요청하면 정확히 그 개수(최대 10개)',
       items: {
         type: 'object',
         properties: {
           exercise: { type: 'string', description: '종목명 (사용자가 하던 이름 그대로, 새 종목은 한국어 일반 명칭)' },
           sets: {
             type: 'array',
-            description: '세트별 목표, 3~5세트',
+            description: '세트별 목표. 기본 3~5세트, 사용자가 세트 수를 요청하면 그 수(최대 8세트)',
             items: { type: 'object', properties: { weight: { type: 'number' }, reps: { type: 'integer' } }, required: ['weight', 'reps'] },
           },
           tip: { type: 'string', description: '이 종목 목표의 근거나 자세 팁 한 문장' },
@@ -48,7 +48,9 @@ const SYSTEM = `당신은 한국어로 답하는 웨이트 트레이닝 코치�
 - 점진적 과부하: 지난 기록보다 무게 또는 횟수를 조금만 올리세요. 한 번에 무게를 5% 넘게 올리지 마세요.
 - 오래 쉰 부위, 정체된 종목, 인바디(골격근·체지방 변화)를 근거로 삼고, summary에 실제 숫자를 인용하세요.
 - 덤벨 무게는 한 손 기준입니다. 처음 하는 종목은 weight 0으로 두고 tip에 무게 찾는 법을 적으세요.
-- 사용자의 요청(request)이 있으면 우선 반영하세요. 통증을 언급하면 그 부위를 피하고 caution에 적으세요.
+- 사용자의 요청(request)이 있으면 위 원칙과 기본값보다 우선합니다. 종목 수·세트 수·시간·부위·제외할 종목을 요청하면 그대로 지키세요.
+  예: "7개로 늘려줘" → items를 정확히 7개로. "등 하고 싶어요" → routine을 등·이두로.
+- 통증을 언급하면 그 부위를 피하고 caution에 적으세요.
 - 의학적 진단은 하지 마세요. 짧고 담백하게, 이모지 없이.`;
 
 type Plan = { routine: string; title: string; summary: string; warmup: string; items: { exercise: string; sets: { weight: number; reps: number }[]; tip: string }[]; caution: string | null };
@@ -81,7 +83,7 @@ export async function POST(request: Request): Promise<Response> {
     p && (ROUTINES as readonly string[]).includes(p.routine) && typeof p.summary === 'string' && Array.isArray(p.items) && p.items.length > 0 &&
     p.items.every((i) => typeof i.exercise === 'string' && Array.isArray(i.sets) && i.sets.every((s) => typeof s.weight === 'number' && typeof s.reps === 'number'));
   if (!valid) return json(502, { error: '추천을 만들지 못했어요. 다시 시도해 주세요' });
-  p.items = p.items.slice(0, 6).map((i) => ({ ...i, tip: i.tip ?? '', sets: i.sets.slice(0, 6).map((s) => ({ weight: Math.max(0, s.weight), reps: Math.max(1, Math.round(s.reps)) })) }));
+  p.items = p.items.slice(0, 10).map((i) => ({ ...i, tip: i.tip ?? '', sets: i.sets.slice(0, 8).map((s) => ({ weight: Math.max(0, s.weight), reps: Math.max(1, Math.round(s.reps)) })) }));
   p.caution = p.caution || null;
 
   await user.record();
