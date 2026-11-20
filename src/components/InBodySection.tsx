@@ -105,7 +105,7 @@ export default function InBodySection({ toast, records, reload: load }: Props) {
         <span className="flex-1">
           <span className="block text-[16px] font-semibold">{scanning ? 'AI가 결과지를 읽는 중이에요' : '결과지 올리기 · AI 스캔'}</span>
           <span className="block text-[13px] text-sub">
-            {scanning ? '보통 5~10초 걸려요' : '사진 또는 PDF를 올리면 AI가 수치를 읽어요 · 하루 10번'}
+            {scanning ? '보통 몇 초면 끝나요' : '사진 또는 PDF를 올리면 AI가 수치를 읽어요 · 하루 10번'}
           </span>
         </span>
       </button>

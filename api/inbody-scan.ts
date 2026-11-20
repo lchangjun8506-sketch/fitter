@@ -5,7 +5,7 @@
  *
  * 필요한 Vercel 환경 변수:
  *   GEMINI_API_KEY                              서버 전용 (VITE_ 접두사 금지)
- *   GEMINI_MODEL (선택)                          기본 gemini-3.8-flash
+ *   GEMINI_MODEL (선택)                          기본 gemini-3.6-flash (붐비면 gemini-3.5-flash-lite)
  *   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY   로그인 확인·사용량 기록용 (앱과 공유)
  */
 export const maxDuration = 60;
@@ -84,24 +84,31 @@ export async function POST(request: Request): Promise<Response> {
   const tracked = usage.ok;
   if (tracked && Number(usage.headers.get('content-range')?.split('/')[1] ?? 0) >= DAILY_LIMIT) return json(429, { error: `AI 스캔은 하루 ${DAILY_LIMIT}번까지예요. 직접 입력해 주세요` });
 
-  const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-  let res: Response;
-  try {
-    res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ inlineData: { mimeType: body.mime, data: body.data } }, { text: PROMPT }] }],
-        generationConfig: { responseMimeType: 'application/json', responseJsonSchema: SCHEMA, temperature: 0 },
-      }),
-    });
-  } catch {
-    return json(502, { error: 'AI 서버에 연결하지 못했어요' });
+  // 기본 모델이 붐비면(503·429) 한 번 더 다른 모델로
+  const models = [...new Set([process.env.GEMINI_MODEL || 'gemini-3.6-flash', 'gemini-3.5-flash-lite'])];
+  let res: Response | null = null;
+  let model = models[0];
+  for (model of models) {
+    try {
+      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ inlineData: { mimeType: body.mime, data: body.data } }, { text: PROMPT }] }],
+          generationConfig: { responseMimeType: 'application/json', responseJsonSchema: SCHEMA, temperature: 0 },
+        }),
+      });
+    } catch {
+      res = null;
+      continue;
+    }
+    if (res.status !== 503 && res.status !== 429) break;
   }
+  if (!res) return json(502, { error: 'AI 서버에 연결하지 못했어요' });
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
-    console.error('gemini', res.status, detail.slice(0, 500));
-    if (res.status === 429) return json(429, { error: 'AI 사용량이 많아 잠시 뒤에 다시 시도해 주세요' });
+    console.error('gemini', model, res.status, detail.slice(0, 500));
+    if (res.status === 429 || res.status === 503) return json(503, { error: 'AI가 잠시 붐벼요. 조금 뒤에 다시 시도해 주세요' });
     return json(502, { error: 'AI가 결과지를 읽지 못했어요' });
   }
 
