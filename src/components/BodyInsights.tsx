@@ -27,7 +27,21 @@ const TONE = {
 };
 
 /* ── 목표 막대 (분석·MY 대시보드 공용) ── */
-export function GoalBar({ s, color, compact = false }: { s: GoalStatus; color: string; compact?: boolean }) {
+export function GoalBar({ s, color, compact = false, mini = false }: { s: GoalStatus; color: string; compact?: boolean; mini?: boolean }) {
+  if (mini)
+    return (
+      <span className="block py-1">
+        <span className="flex justify-between text-[12px]">
+          <span className="font-semibold">{s.unit === '%' ? '체지방률' : '골격근'}</span>
+          <span className="text-sub">
+            {s.current} → {s.target}
+          </span>
+        </span>
+        <span className="relative block h-1.5 mt-1 rounded-full bg-fill" aria-label={`${s.label} ${Math.round(s.pct * 100)}%`}>
+          <span className={`absolute inset-y-0 left-0 rounded-full ${color}`} style={{ width: `${Math.max(s.pct * 100, s.pct > 0 ? 4 : 0)}%` }} />
+        </span>
+      </span>
+    );
   const paceCls = s.pace === 'ahead' || s.pace === 'done' ? 'text-up' : s.pace === 'behind' || s.pace === 'wrong' ? 'text-down' : 'text-sub';
   return (
     <div className={compact ? 'py-2' : 'px-4 py-3.5 [&+*]:shadow-[inset_0_1px_0_var(--sep)]'}>

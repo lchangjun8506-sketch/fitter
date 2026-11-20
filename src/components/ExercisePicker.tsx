@@ -4,6 +4,8 @@ import { ROUTINES, ROUTINE_EXERCISES } from '../data/exercises';
 import type { CustomExercise, Routine, WorkoutLog } from '../lib/types';
 import Sheet from './Sheet';
 import Segmented from './Segmented';
+import { PoseTile } from './Pose';
+import { exerciseInfo } from '../data/muscles';
 
 interface Props {
   open: boolean;
@@ -30,8 +32,12 @@ export default function ExercisePicker({ open, initialRoutine, logs, custom, onC
   }, [routine, logs, custom]);
 
   const Row = ({ e }: { e: string }) => (
-    <button onClick={() => onPick(routine, e)} className="tap row w-full gap-3 text-left text-[17px] [&+*]:shadow-[inset_0_1px_0_var(--sep)]">
-      <span className="flex-1 min-w-0 truncate">{e}</span>
+    <button onClick={() => onPick(routine, e)} className="tap flex items-center w-full gap-3 px-3 py-2 text-left [&+*]:shadow-[inset_0_1px_0_var(--sep)]">
+      <PoseTile pose={exerciseInfo(e, routine).pose} size={44} />
+      <span className="flex-1 min-w-0">
+        <span className="block text-[16px] font-semibold truncate">{e}</span>
+        <span className="block text-[12px] text-sub truncate">{exerciseInfo(e, routine).focus}</span>
+      </span>
       {list.last.get(e) && <span className="text-[13px] text-sub shrink-0">{list.last.get(e)!.slice(5).replace('-', '.')}</span>}
       <ChevronRight aria-hidden className="w-5 h-5 text-sub/60 shrink-0" />
     </button>

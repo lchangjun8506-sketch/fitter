@@ -9,6 +9,9 @@ import type { NewLog, Routine, WorkoutLog, WorkoutSet } from '../lib/types';
 import RestPill from './RestTimer';
 import { pushEnabled, pushSupport } from '../lib/push';
 import { supabase } from '../lib/supabase';
+import { exerciseInfo, MUSCLE_LABEL } from '../data/muscles';
+import { AnatomyPair } from './Anatomy';
+import { PoseTile } from './Pose';
 
 export interface ExerciseTarget {
   routine: Routine;
@@ -155,6 +158,7 @@ export default function ExerciseSheet({ open, target, logs, busy, onClose, onSav
 
   const history = useMemo(() => (target ? logs.filter((l) => l.exercise === target.exercise && l.id !== editing?.id) : []), [logs, target, editing]);
   const tip = coachingTip(history);
+  const info = target ? exerciseInfo(target.exercise, target.routine) : null;
   const hint = target?.note ?? (tip ? `${tip.title} · ${tip.desc}` : '처음 하는 종목이에요. 10~12회가 버거운 무게를 찾아보세요.');
 
   const patch = (i: number, p: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...p } : r)));
@@ -229,8 +233,27 @@ export default function ExerciseSheet({ open, target, logs, busy, onClose, onSav
         </div>
 
         <div ref={scroller} className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6">
-          <h2 className="text-[28px] font-bold tracking-[-0.02em] leading-tight mt-1">{target?.exercise}</h2>
-          <p className="text-[14px] text-sub leading-relaxed mt-1">{hint}</p>
+          {info && (
+            <section aria-label="자세와 쓰는 근육" className="group-card flex items-center gap-3 px-3.5 py-3">
+              <PoseTile pose={info.pose} size={84} />
+              <AnatomyPair primary={info.primary} secondary={info.secondary} height={104} label={`주동근 ${info.primary.map((m) => MUSCLE_LABEL[m]).join(', ')}`} />
+              <div className="flex-1 min-w-0 text-[12px] leading-snug space-y-1.5">
+                <div>
+                  <div className="flex items-center gap-1 font-bold"><i aria-hidden className="w-2.5 h-2.5 rounded-[3px] bg-[#D9452B]" />주동근</div>
+                  <div className="text-sub">{info.primary.map((m) => MUSCLE_LABEL[m]).join(' · ')}</div>
+                </div>
+                {info.secondary.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1 font-bold"><i aria-hidden className="w-2.5 h-2.5 rounded-[3px] bg-[#EDA48A]" />보조</div>
+                    <div className="text-sub">{info.secondary.map((m) => MUSCLE_LABEL[m]).join(' · ')}</div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+          <h2 className="text-[28px] font-bold tracking-[-0.02em] leading-tight mt-4">{target?.exercise}</h2>
+          {info?.cue && <p className="text-[14px] leading-relaxed mt-1">{info.cue}</p>}
+          <p className="text-[14px] text-sub leading-relaxed mt-0.5">{hint}</p>
 
           <div className="group-card mt-5">
             {rows.map((r, i) => {

@@ -8,9 +8,11 @@ interface Props {
   logs: WorkoutLog[];
   onEdit: (log: WorkoutLog) => void;
   onDelete: (id: string) => void;
+  /** 검색칸 표시 (날짜 하나만 볼 때는 숨김) */
+  search?: boolean;
 }
 
-export default function HistoryList({ logs, onEdit, onDelete }: Props) {
+export default function HistoryList({ logs, onEdit, onDelete, search = true }: Props) {
   const [q, setQ] = useState('');
 
   const groups = useMemo(() => {
@@ -25,11 +27,11 @@ export default function HistoryList({ logs, onEdit, onDelete }: Props) {
 
   return (
     <div className="space-y-6">
-      <label className="flex items-center gap-2 h-11 px-3 rounded-[12px] bg-fill">
+      {search && <label className="flex items-center gap-2 h-11 px-3 rounded-[12px] bg-fill">
         <Search aria-hidden className="w-[18px] h-[18px] text-sub" strokeWidth={2} />
         <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="기록 검색" placeholder="검색"
           className="flex-1 min-w-0 bg-transparent text-[16px] placeholder:text-sub focus:outline-none" />
-      </label>
+      </label>}
 
       {groups.length === 0 && (
         <p className="py-16 text-center text-[15px] text-sub">{q ? '검색 결과가 없습니다.' : '아직 기록이 없습니다.'}</p>

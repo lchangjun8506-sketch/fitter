@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronRight, Loader2, Plus, Sparkles } from 'lucide-react';
+import { Check, Loader2, Plus, Sparkles } from 'lucide-react';
 import { recommendToday, type Recommendation } from '../lib/recommend';
 import { askAiRoutine, type AiPlan } from '../lib/aiRoutine';
 import { setVolume, setsLabel, streakOf } from '../lib/analysis';
@@ -10,6 +10,9 @@ import type { InBodyRecord } from '../lib/inbody';
 import type { CustomExercise, Routine, WorkoutLog } from '../lib/types';
 import type { ExerciseTarget } from './ExerciseSheet';
 import Sheet from './Sheet';
+import { AnatomyPair } from './Anatomy';
+import { PoseTile } from './Pose';
+import { exerciseInfo, mergeMuscles, MUSCLE_LABEL } from '../data/muscles';
 import LoginPanel from './LoginPanel';
 
 interface Props {
@@ -86,48 +89,93 @@ export default function TodayPanel({ logs, custom, inbody, onOpen, onOther, toas
 
   const Item = ({ exercise, routine, sub, log, onClick }: { exercise: string; routine: Routine; sub: string; log?: WorkoutLog; onClick: () => void }) => {
     const draft = !log ? getDraft(draftKey(today, exercise)) : null;
+    const info = exerciseInfo(exercise, routine);
     return (
-      <button onClick={onClick} className="tap row w-full gap-3 min-h-[64px] py-2 text-left [&+*]:shadow-[inset_0_1px_0_var(--sep)]">
-        <span className={`w-7 h-7 rounded-full grid place-items-center shrink-0 ${log ? 'bg-accent text-onaccent' : draft ? 'shadow-[inset_0_0_0_2px_rgb(var(--accent))]' : 'shadow-[inset_0_0_0_2px_var(--sep)]'}`}>
-          {log && <Check aria-label="완료" className="w-4 h-4" strokeWidth={3} />}
-        </span>
+      <button onClick={onClick} className="tap flex items-center w-full gap-3 px-3 py-2.5 text-left [&+*]:shadow-[inset_0_1px_0_var(--sep)]">
+        <PoseTile pose={info.pose} size={52} />
         <span className="flex-1 min-w-0">
-          <span className={`block text-[17px] font-semibold truncate ${log ? 'text-sub' : ''}`}>{exercise}</span>
-          <span className="block text-[13px] text-sub truncate">
-            {log ? `${setsLabel(log.sets)} 완료` : draft ? <span className="text-accent font-semibold">진행 중 · {draft.done}/{draft.rows.length}세트</span> : sub}
+          <span className={`block text-[16px] font-bold truncate ${log ? 'text-sub' : ''}`}>{exercise}</span>
+          <span className="flex items-center gap-1.5 mt-1 min-w-0">
+            <span className="shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded-[5px] bg-accent/10 text-accent">{info.focus}</span>
+            <span className="text-[12px] text-sub truncate">
+              {log ? `${setsLabel(log.sets)} 완료` : draft ? <span className="text-accent font-semibold">진행 중 · {draft.done}/{draft.rows.length}세트</span> : sub}
+            </span>
           </span>
         </span>
-        <span className="sr-only">{routine}</span>
-        <ChevronRight aria-hidden className="w-5 h-5 text-sub/60 shrink-0" />
+        <span aria-label={log ? '완료' : draft ? '진행 중' : '안 함'} className={`w-7 h-7 rounded-full grid place-items-center shrink-0 ${log ? 'bg-accent text-onaccent' : draft ? 'shadow-[inset_0_0_0_2px_rgb(var(--accent))]' : 'shadow-[inset_0_0_0_2px_var(--sep)]'}`}>
+          {log && <Check aria-hidden className="w-4 h-4" strokeWidth={3} />}
+        </span>
       </button>
     );
   };
 
   const vol = volume >= 1000 ? { v: (volume / 1000).toFixed(1), u: 't' } : { v: String(volume), u: 'kg' };
+  const muscles = mergeMuscles(plan.items.map((i) => exerciseInfo(i.exercise, plan.routine)));
+
+  // 이번 주 (월~일)
+  const week = useMemo(() => {
+    const trained = new Set(logs.map((l) => l.date));
+    const d = new Date();
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return ['월', '화', '수', '목', '금', '토', '일'].map((label, i) => {
+      const x = new Date(mon);
+      x.setDate(mon.getDate() + i);
+      const ds = todayStr(x);
+      return { label, day: x.getDate(), done: trained.has(ds), today: ds === today, future: ds > today };
+    });
+  }, [logs, today]);
 
   return (
-    <div className="space-y-6">
-      <section aria-label="오늘 현황" className="group-card grid grid-cols-3">
-        {[
-          { k: '완료', v: String(doneCount), u: `/${plan.items.length}` },
-          { k: '볼륨', ...vol },
-          { k: '연속', v: String(streak), u: '일' },
-        ].map((s, i) => (
-          <div key={s.k} className={`px-4 py-3.5 ${i ? 'shadow-[inset_1px_0_0_var(--sep)]' : ''}`}>
-            <div className="caption">{s.k}</div>
-            <div className="num text-[30px] leading-none mt-1.5">
-              {s.v}
-              <span className="font-sans text-[14px] text-sub ml-0.5">{s.u}</span>
-            </div>
+    <div className="space-y-5">
+      <section aria-label="이번 주" className="grid grid-cols-7 gap-1 -mt-1">
+        {week.map((w) => (
+          <div key={w.label} className="flex flex-col items-center gap-1.5">
+            <span className={`text-[11px] font-semibold ${w.today ? 'text-accent' : 'text-sub'}`}>{w.label}</span>
+            <span
+              aria-label={`${w.label} ${w.day}일${w.done ? ' 운동함' : ''}`}
+              className={`num w-9 h-9 rounded-full grid place-items-center text-[15px] ${
+                w.today ? (w.done ? 'bg-accent text-onaccent' : 'shadow-[inset_0_0_0_2px_rgb(var(--accent))] text-accent') : w.done ? 'bg-ink text-onink' : w.future ? 'text-sub/50' : 'bg-card'
+              }`}
+            >
+              {w.day}
+            </span>
           </div>
         ))}
       </section>
 
-      <section aria-label="오늘의 추천 루틴">
+      <section aria-label="오늘의 추천 루틴" className="group-card">
+        <div className="flex items-center gap-2 pl-4 pr-3 pt-3.5 pb-2">
+          <div className="flex-1 min-w-0">
+            <div className="text-[12px] font-bold text-accent">{ai ? 'AI 추천 루틴' : '추천 루틴'}</div>
+            <div className="text-[28px] font-extrabold tracking-[-0.02em] leading-tight mt-0.5">{plan.routine}</div>
+            <p className="text-[13px] text-sub leading-snug mt-1.5 line-clamp-3">{plan.reason}</p>
+            <p className="text-[13px] font-semibold mt-2">{plan.items.length}종목</p>
+          </div>
+          <AnatomyPair primary={muscles.primary} secondary={muscles.secondary} height={150} label={`오늘 쓰는 근육: ${muscles.primary.map((m) => MUSCLE_LABEL[m]).join(', ')}`} />
+        </div>
+        <div className="grid grid-cols-3 shadow-[inset_0_1px_0_var(--sep)]" aria-label="오늘 현황">
+          {[
+            { k: '완료', v: String(doneCount), u: `/${plan.items.length}` },
+            { k: '볼륨', ...vol },
+            { k: '연속', v: String(streak), u: '일' },
+          ].map((s, i) => (
+            <div key={s.k} className={`px-4 py-3 ${i ? 'shadow-[inset_1px_0_0_var(--sep)]' : ''}`}>
+              <div className="caption">{s.k}</div>
+              <div className="num text-[26px] leading-none mt-1">
+                {s.v}
+                <span className="font-sans text-[13px] text-sub ml-0.5">{s.u}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        {ai?.warmup && <p className="px-4 pb-1 text-[13px] text-sub">준비운동 · {ai.warmup}</p>}
+        {ai?.caution && <p className="px-4 pb-3 text-[13px] text-down">주의 · {ai.caution}</p>}
+      </section>
+
+      <section aria-label="종목">
         <div className="flex items-end justify-between">
-          <h2 className="section-label">
-            {ai ? 'AI 추천' : '추천 루틴'} · {plan.routine}
-          </h2>
+          <h2 className="section-label !text-[15px] !text-ink !font-bold">종목</h2>
           {ai ? (
             <button onClick={() => setAi(null)} className="tap h-11 px-1 pb-2 text-[14px] text-sub">기본 추천 보기</button>
           ) : (
@@ -151,9 +199,6 @@ export default function TodayPanel({ logs, custom, inbody, onOpen, onOther, toas
             />
           ))}
         </div>
-        <p className="px-4 pt-2 text-[13px] text-sub leading-relaxed">{plan.reason}</p>
-        {ai?.warmup && <p className="px-4 pt-1 text-[13px] text-sub">준비운동 · {ai.warmup}</p>}
-        {ai?.caution && <p className="px-4 pt-1 text-[13px] text-down">주의 · {ai.caution}</p>}
       </section>
 
       {extra.length > 0 && (

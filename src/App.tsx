@@ -5,8 +5,8 @@ import { useAuth } from './lib/auth';
 import { supabase } from './lib/supabase';
 import { CloudRepo, deviceRepo } from './lib/storage';
 import LabTab, { LAB_TITLES, type LabSub } from './components/LabTab';
-import MyTab, { type MySub } from './components/MyTab';
-import StatsTab, { type StatsSub } from './components/StatsTab';
+import MyTab, { MY_TITLES, type MySub } from './components/MyTab';
+import StatsTab, { STATS_TITLES, type StatsSub } from './components/StatsTab';
 import TodayPanel from './components/RoutineCard';
 import ExerciseSheet, { type ExerciseTarget } from './components/ExerciseSheet';
 import ExercisePicker from './components/ExercisePicker';
@@ -34,29 +34,23 @@ const LAB_SUBS: LabSub[] = ['battle', '1rm', 'alerts'];
 
 /** 주소: #stats, #stats/inbody, #lab, #lab/battle|1rm|alerts, #me, #me/history (예전 #history → MY·히스토리, #battle → 실험실·대결) */
 interface Route { tab: Tab; stats: StatsSub; me: MySub; lab: LabSub }
+const STATS_SUBS: StatsSub[] = ['workout', 'volume', 'inbody'];
 const parseHash = (hash: string): Route => {
   const [t, sub] = hash.replace(/^#/, '').split('/');
-  const base: Route = { tab: 'log', stats: 'workout', me: 'dash', lab: 'home' };
+  const base: Route = { tab: 'log', stats: 'home', me: 'home', lab: 'home' };
   if (t === 'history') return { ...base, tab: 'me', me: 'history' };
   if (t === 'battle') return { ...base, tab: 'lab', lab: 'battle' };
   const tab = TAB_IDS.includes(t as Tab) ? (t as Tab) : 'log';
   return {
     tab,
-    stats: tab === 'stats' && sub === 'inbody' ? 'inbody' : 'workout',
-    me: tab === 'me' && sub === 'history' ? 'history' : 'dash',
+    stats: tab === 'stats' && STATS_SUBS.includes(sub as StatsSub) ? (sub as StatsSub) : 'home',
+    me: tab === 'me' && sub === 'history' ? 'history' : 'home',
     lab: tab === 'lab' && LAB_SUBS.includes(sub as LabSub) ? (sub as LabSub) : 'home',
   };
 };
-const toHash = (r: Route) =>
-  r.tab === 'log'
-    ? ''
-    : r.tab === 'stats' && r.stats === 'inbody'
-      ? '#stats/inbody'
-      : r.tab === 'me' && r.me === 'history'
-        ? '#me/history'
-        : r.tab === 'lab' && r.lab !== 'home'
-          ? `#lab/${r.lab}`
-          : `#${r.tab}`;
+/** 탭 안의 하위 화면 (#stats/inbody 등) */
+const subOf = (r: Route): string => (r.tab === 'stats' ? r.stats : r.tab === 'me' ? r.me : r.tab === 'lab' ? r.lab : 'home');
+const toHash = (r: Route) => (r.tab === 'log' ? '' : subOf(r) === 'home' ? `#${r.tab}` : `#${r.tab}/${subOf(r)}`);
 
 /** 화면 위에 뜨는 시트 (한 번에 하나, 뒤로가기로 닫힘) */
 type Overlay = { kind: 'none' } | { kind: 'picker'; routine: Routine } | { kind: 'add'; routine: Routine } | { kind: 'exercise' };
@@ -166,9 +160,10 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
   // 탭을 다시 누르면 그 탭의 첫 화면으로
-  const go = (t: Tab) => navigate(t === route.tab ? { ...route, lab: 'home' } : { ...route, tab: t });
+  const toHome = { ...route, stats: 'home' as StatsSub, me: 'home' as MySub, lab: 'home' as LabSub };
+  const go = (t: Tab) => navigate(t === route.tab ? toHome : { ...route, tab: t });
   const pillShown = ready && overlay.kind !== 'exercise' && (rest.running || rest.done);
-  const labSubPage = tab === 'lab' && route.lab !== 'home';
+  const subPage = subOf(route) !== 'home';
 
   return (
     <>
@@ -177,16 +172,16 @@ export default function App() {
       <div className={ready ? 'app-enter' : 'opacity-0'}>
       <header className="max-w-md mx-auto px-5 pt-[max(env(safe-area-inset-top),20px)] pb-5">
         <div className="flex items-center gap-2 h-9 -mb-2">
-          {labSubPage ? (
-            <button onClick={() => navigate({ ...route, lab: 'home' })} className="tap -ml-1.5 h-9 flex items-center gap-0.5 text-[15px] font-medium text-accent">
-              <ChevronLeft aria-hidden className="w-5 h-5" strokeWidth={2.25} /> 실험실
+          {subPage ? (
+            <button onClick={() => navigate(toHome)} className="tap -ml-1.5 h-9 flex items-center gap-0.5 text-[15px] font-medium text-accent">
+              <ChevronLeft aria-hidden className="w-5 h-5" strokeWidth={2.25} /> {TITLES[tab]}
             </button>
           ) : (
-            <p className="caption">{tab === 'log' ? todayLabel() : tab === 'stats' ? `총 ${w.logs.length}개 기록` : tab === 'lab' ? '새로 시도하는 기능' : auth.handle ?? (auth.session ? '닉네임을 정해 주세요' : '로그인 전')}</p>
+            <p className="caption">{tab === 'log' ? todayLabel() : tab === 'stats' ? '한눈에 보기' : tab === 'lab' ? '새로 시도하는 기능' : '내 정보'}</p>
           )}
           {w.loading && <Loader2 aria-label="불러오는 중" className="w-3.5 h-3.5 animate-spin text-sub" />}
         </div>
-        <h1 className="text-[34px] font-bold leading-tight tracking-[-0.02em]">{tab === 'lab' ? LAB_TITLES[route.lab] : TITLES[tab]}</h1>
+        <h1 className="text-[34px] font-bold leading-tight tracking-[-0.02em]">{tab === 'lab' ? LAB_TITLES[route.lab] : tab === 'stats' ? STATS_TITLES[route.stats] : tab === 'me' ? MY_TITLES[route.me] : TITLES[tab]}</h1>
       </header>
 
       <main className="max-w-md mx-auto px-4 space-y-6">
