@@ -5,7 +5,7 @@
  *
  * 필요한 Vercel 환경 변수: GEMINI_API_KEY (서버 전용), VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
  */
-import { checkUser, geminiJson, json } from './_gemini';
+import { checkUser, geminiJson, json } from './_gemini.js';
 
 export const maxDuration = 60;
 

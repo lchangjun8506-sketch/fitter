@@ -8,7 +8,7 @@
  *   GEMINI_MODEL (선택)                          기본 gemini-3.6-flash (붐비면 gemini-3.5-flash-lite, api/_gemini.ts)
  *   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY   로그인 확인·사용량 기록용 (앱과 공유)
  */
-import { checkUser, geminiJson, json } from './_gemini';
+import { checkUser, geminiJson, json } from './_gemini.js';
 
 export const maxDuration = 60;
 
