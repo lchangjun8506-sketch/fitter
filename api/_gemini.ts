@@ -1,6 +1,6 @@
 /**
  * Google Gemini 호출 공용 (파일 이름이 _로 시작하면 Vercel이 주소로 열지 않음)
- * 기본 모델이 붐비면(503·429) 가벼운 모델로 한 번 더 시도.
+ * 기본 모델이 붐비거나(503·429) 35초 안에 답하지 않으면 가벼운 모델로 한 번 더 시도.
  * 키: GEMINI_API_KEY (서버 전용), 모델: GEMINI_MODEL (선택)
  */
 export type Part = { text: string } | { inlineData: { mimeType: string; data: string } };
@@ -14,11 +14,17 @@ export async function geminiJson(opts: { parts: Part[]; schema: object; system?:
   if (!apiKey) return { ok: false, status: 503, error: 'AI 기능이 아직 설정되지 않았어요' };
   const models = [...new Set([process.env.GEMINI_MODEL || 'gemini-3.6-flash', 'gemini-3.5-flash-lite'])];
   let res: Response | null = null;
+  let bodyText = '';
   let model = models[0];
-  for (model of models) {
+  for (const [i, m] of models.entries()) {
+    model = m;
+    // 마지막 모델은 넉넉히, 앞 모델은 35초에서 끊고 다음으로
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), i < models.length - 1 ? 35_000 : 50_000);
     try {
       res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST',
+        signal: ac.signal,
         headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify({
           ...(opts.system ? { systemInstruction: { parts: [{ text: opts.system }] } } : {}),
@@ -26,20 +32,27 @@ export async function geminiJson(opts: { parts: Part[]; schema: object; system?:
           generationConfig: { responseMimeType: 'application/json', responseJsonSchema: opts.schema, temperature: opts.temperature ?? 0 },
         }),
       });
+      bodyText = await res.text(); // 본문까지 시간 안에 받기
     } catch {
       res = null;
       continue;
+    } finally {
+      clearTimeout(timer);
     }
     if (res.status !== 503 && res.status !== 429) break;
   }
   if (!res) return { ok: false, status: 502, error: 'AI 서버에 연결하지 못했어요' };
   if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    console.error('gemini', model, res.status, detail.slice(0, 500));
+    console.error('gemini', model, res.status, bodyText.slice(0, 500));
     if (res.status === 429 || res.status === 503) return { ok: false, status: 503, error: 'AI가 잠시 붐벼요. 조금 뒤에 다시 시도해 주세요' };
     return { ok: false, status: 502, error: 'AI가 답하지 못했어요' };
   }
-  const out = (await res.json()) as { candidates?: { finishReason?: string; content?: { parts?: { text?: string }[] } }[] };
+  let out: { candidates?: { finishReason?: string; content?: { parts?: { text?: string }[] } }[] };
+  try {
+    out = JSON.parse(bodyText);
+  } catch {
+    return { ok: false, status: 502, error: 'AI 응답을 이해하지 못했어요' };
+  }
   const c = out.candidates?.[0];
   if (c?.finishReason === 'SAFETY' || c?.finishReason === 'PROHIBITED_CONTENT') return { ok: false, status: 422, error: '이 요청에는 답할 수 없어요' };
   const text = c?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';

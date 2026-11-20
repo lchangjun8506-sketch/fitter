@@ -1,6 +1,13 @@
 import type { WorkoutLog, WorkoutSet } from './types';
 import { todayStr } from './date';
 
+/** 추천 횟수 단계: 8 → 10 → 12 → 15 (15를 채우면 무게를 올리고 8부터) */
+export const REP_STEPS = [8, 10, 12, 15] as const;
+/** r보다 큰 다음 단계 (15 이상이면 null = 증량할 차례) */
+export const nextRepStep = (r: number): number | null => REP_STEPS.find((s) => s > r) ?? null;
+/** 가장 가까운 단계로 맞춤 */
+export const snapReps = (r: number) => REP_STEPS.reduce((a, b) => (Math.abs(b - r) < Math.abs(a - r) ? b : a));
+
 export function setVolume(sets: WorkoutSet[]): number {
   return sets.reduce(
     (sum, s) => sum + s.weight * s.reps + (s.drops ?? []).reduce((a, d) => a + d.weight * d.reps, 0),
@@ -48,11 +55,12 @@ export function coachingTip(history: WorkoutLog[]): Tip | null {
   if (!last) return null;
   const w = topWeight(last.sets);
   const r = topReps(last.sets);
-  if (r >= 12)
-    return { tone: 'up', title: '증량할 차례입니다', desc: `지난 기록 ${w}kg × ${r}회. 이번에는 ${w + 2.5}kg로 시작해 보세요.` };
+  const next = nextRepStep(r);
+  if (next == null)
+    return { tone: 'up', title: '증량할 차례입니다', desc: `지난 기록 ${w}kg × ${r}회. 무게를 올려 8회부터 시작해 보세요.` };
   if (progressStatus(history) === 'stall')
-    return { tone: 'warn', title: '3회 연속 같은 무게', desc: '횟수를 2회 늘리거나 마지막 세트에 드롭세트를 더해 보세요.' };
-  return { tone: 'keep', title: '같은 무게, 1~2회 더', desc: `지난 기록 ${w}kg × ${r}회.` };
+    return { tone: 'warn', title: '3회 연속 같은 무게', desc: `${next}회를 목표로 하고 마지막 세트에 드롭세트를 더해 보세요.` };
+  return { tone: 'keep', title: `같은 무게로 ${next}회`, desc: `지난 기록 ${w}kg × ${r}회. 8·10·12·15회 순서로 올려요.` };
 }
 
 export const dayStr = (offset: number) => {

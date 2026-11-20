@@ -5,7 +5,7 @@
  * 3) 목표: 지난 기록 + 점진적 과부하 규칙
  */
 import { ROUTINES, ROUTINE_EXERCISES } from '../data/exercises';
-import { progressStatus, topReps, topWeight } from './analysis';
+import { nextRepStep, progressStatus, topReps, topWeight } from './analysis';
 import { todayStr } from './date';
 import type { Routine, WorkoutLog, WorkoutSet } from './types';
 
@@ -37,17 +37,19 @@ function target(history: WorkoutLog[]): { sets: WorkoutSet[]; note: string } {
   const n = Math.max(3, Math.min(5, last.sets.length));
   const status = progressStatus(history);
 
-  if (r >= 12) {
+  // 횟수는 8 → 10 → 12 → 15 단계로만. 15를 채우면 무게를 올리고 8회부터
+  const next = nextRepStep(r);
+  if (next == null) {
     const nw = w + step(w);
     return { sets: Array.from({ length: n }, () => ({ weight: nw, reps: 8 })), note: `지난번 ${w}kg × ${r}회 → ${nw}kg로 올려 8회 목표` };
   }
   if (status === 'stall') {
     return {
-      sets: Array.from({ length: n }, (_, i) => ({ weight: w, reps: Math.min(r + 2, 15), ...(i === n - 1 ? { drops: [{ weight: Math.round(w * 0.7 * 2) / 2, reps: 8 }] } : {}) })),
-      note: `${w}kg에서 3회 정체 → 횟수 +2, 마지막 세트 드롭`,
+      sets: Array.from({ length: n }, (_, i) => ({ weight: w, reps: next, ...(i === n - 1 ? { drops: [{ weight: Math.round(w * 0.7 * 2) / 2, reps: 8 }] } : {}) })),
+      note: `${w}kg에서 3회 정체 → ${next}회 목표, 마지막 세트 드롭`,
     };
   }
-  return { sets: Array.from({ length: n }, () => ({ weight: w, reps: r + 1 })), note: `지난번 ${w}kg × ${r}회 → 같은 무게 ${r + 1}회 목표` };
+  return { sets: Array.from({ length: n }, () => ({ weight: w, reps: next })), note: `지난번 ${w}kg × ${r}회 → 같은 무게 ${next}회 목표` };
 }
 
 export function recommendToday(logs: WorkoutLog[], customByRoutine: Partial<Record<Routine, string[]>> = {}): Recommendation {
