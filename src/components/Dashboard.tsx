@@ -18,7 +18,7 @@ function Spark({ values, label }: { values: number[]; label: string }) {
   const span = max - min || 1;
   const pts = values.map((v, i) => `${(i / (values.length - 1)) * 100},${26 - ((v - min) / span) * 22}`).join(' ');
   return (
-    <svg role="img" aria-label={label} viewBox="0 0 100 28" preserveAspectRatio="none" className="w-20 h-7 text-accent">
+    <svg role="img" aria-label={label} viewBox="0 0 100 28" preserveAspectRatio="none" className="w-20 h-7 text-accentfg">
       <polyline points={pts} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );

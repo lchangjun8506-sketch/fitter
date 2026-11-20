@@ -63,7 +63,7 @@ function MonthGrid({ year, month, logs, selected, onSelect, compact = false }: {
           const d = ds(i + 1);
           const on = v > 0;
           const style = on ? { backgroundColor: `rgb(var(--accent) / ${0.35 + (v / max) * 0.65})` } : undefined;
-          const cls = `aspect-square rounded-[8px] grid place-items-center text-[12px] font-semibold ${on ? 'text-white' : 'bg-fill/70 text-sub'} ${
+          const cls = `aspect-square rounded-[8px] grid place-items-center text-[12px] font-semibold ${on ? 'text-onaccent' : 'bg-fill/70 text-sub'} ${
             d === today ? 'ring-2 ring-ink ring-offset-1 ring-offset-card' : ''
           } ${selected === d ? 'outline outline-2 outline-offset-2 outline-ink' : ''}`;
           return onSelect && !compact ? (
@@ -107,7 +107,7 @@ function Home(p: Props) {
             운동한 날 {totalDays}일 · 연속 {streakOf(p.logs)}일 · {{ kakao: '카카오', google: 'Google' }[provider ?? ''] ?? ''}
           </span>
         </span>
-        <button onClick={() => shareHandle(handle, p.toast)} aria-label="아이디 공유" className="tap w-11 h-11 grid place-items-center text-accent">
+        <button onClick={() => shareHandle(handle, p.toast)} aria-label="아이디 공유" className="tap w-11 h-11 grid place-items-center text-accentfg">
           <Share aria-hidden className="w-5 h-5" strokeWidth={1.75} />
         </button>
       </section>
@@ -160,7 +160,7 @@ function Home(p: Props) {
         {st && (st.fat || st.muscle) ? (
           <span className="block mt-1" aria-label="내 목표">
             {st.fat && <GoalBar s={st.fat} color="bg-accent" compact />}
-            {st.muscle && <GoalBar s={st.muscle} color="bg-ink" compact />}
+            {st.muscle && <GoalBar s={st.muscle} color="bg-cyan" compact />}
           </span>
         ) : (
           <span className="block text-[13px] text-sub mt-1">{p.inbody.length ? '체지방률 줄이기 · 근육 늘리기 목표를 정해 보세요' : '인바디를 올리고 목표를 정해 보세요'}</span>

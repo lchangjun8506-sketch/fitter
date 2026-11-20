@@ -71,7 +71,7 @@ export default function ImportSheet({ open, onClose, cloud, logs, custom, onDone
 
       <input ref={input} type="file" accept=".csv,text/csv,text/plain" className="hidden" onChange={(e) => onPick(e.target.files?.[0])} />
       <button onClick={() => input.current?.click()} className="tap w-full group-card !bg-elevcard row gap-3 min-h-[60px] text-left">
-        <span className="w-10 h-10 rounded-full bg-accent/10 text-accent grid place-items-center shrink-0">
+        <span className="w-10 h-10 rounded-full bg-accent/10 text-accentfg grid place-items-center shrink-0">
           <FileUp aria-hidden className="w-5 h-5" strokeWidth={1.75} />
         </span>
         <span className="flex-1 min-w-0">
@@ -84,7 +84,7 @@ export default function ImportSheet({ open, onClose, cloud, logs, custom, onDone
         <div className="group-card !bg-elevcard">
           <div className="row justify-between">
             <span className="text-[16px]">가져올 기록</span>
-            <span className="num text-[22px] text-accent">{n}</span>
+            <span className="num text-[22px] text-accentfg">{n}</span>
           </div>
           {preview.from && (
             <div className="row justify-between">

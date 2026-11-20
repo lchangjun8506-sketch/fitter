@@ -22,7 +22,7 @@ import Segmented from './Segmented';
 const TONE = {
   good: 'bg-up/10 text-up',
   warn: 'bg-down/10 text-down',
-  bad: 'bg-accent/10 text-accent',
+  bad: 'bg-accent/10 text-accentfg',
   neutral: 'bg-fill text-sub',
 };
 
@@ -260,17 +260,17 @@ export default function BodyInsights({ records, logs, goal, saveGoal }: { record
         <div className="flex items-end justify-between">
           <h2 className="section-label">{goal ? `내 목표 · ${monthDay(goal.targetDate)}까지` : '내 목표'}</h2>
           {goal && (
-            <button onClick={() => setSheet(true)} className="tap h-11 px-1 pb-2 text-[14px] font-semibold text-accent">목표 수정</button>
+            <button onClick={() => setSheet(true)} className="tap h-11 px-1 pb-2 text-[14px] font-semibold text-accentfg">목표 수정</button>
           )}
         </div>
         {goal && st ? (
           <div className="group-card">
             {st.fat && <GoalBar s={st.fat} color="bg-accent" />}
-            {st.muscle && <GoalBar s={st.muscle} color="bg-ink" />}
+            {st.muscle && <GoalBar s={st.muscle} color="bg-cyan" />}
           </div>
         ) : (
           <button onClick={() => setSheet(true)} className="tap w-full group-card row gap-3 min-h-[64px] text-left">
-            <span className="w-10 h-10 rounded-full bg-accent/10 text-accent grid place-items-center shrink-0">
+            <span className="w-10 h-10 rounded-full bg-accent/10 text-accentfg grid place-items-center shrink-0">
               <Target aria-hidden className="w-5 h-5" strokeWidth={2} />
             </span>
             <span className="flex-1">
@@ -287,7 +287,7 @@ export default function BodyInsights({ records, logs, goal, saveGoal }: { record
         {enough ? (
           <div className="space-y-2.5">
             <Segmented label="기간" value={period} onChange={setPeriod} options={[{ id: '90', label: '3개월' }, { id: '180', label: '6개월' }, { id: 'all', label: '전체' }]} />
-            <TrendChart title="골격근량" unit="kg" pts={muscle} target={goal?.muscleTarget ?? null} stroke="rgb(var(--ink))" period={period === 'all' ? null : Number(period)} />
+            <TrendChart title="골격근량" unit="kg" pts={muscle} target={goal?.muscleTarget ?? null} stroke="rgb(var(--cyan))" period={period === 'all' ? null : Number(period)} />
             <TrendChart title="체지방률" unit="%" pts={fat} target={goal?.fatTarget ?? null} stroke="rgb(var(--accent))" period={period === 'all' ? null : Number(period)} />
             <p className="px-1 text-[12px] text-sub">점선은 목표, 점을 누르면 그날 수치를 볼 수 있어요.</p>
           </div>
@@ -322,13 +322,13 @@ export default function BodyInsights({ records, logs, goal, saveGoal }: { record
               <span className="text-[15px] w-full">부위 비중 · 세트 수</span>
               <div className="flex w-full h-2.5 rounded-full overflow-hidden bg-fill" aria-hidden>
                 {link.share.map((s, i) => (
-                  <div key={s.routine} style={{ width: `${s.pct}%` }} className={['bg-accent', 'bg-ink', 'bg-down', 'bg-up'][i]} />
+                  <div key={s.routine} style={{ width: `${s.pct}%` }} className={['bg-accent', 'bg-ink', 'bg-amber', 'bg-cyan'][i]} />
                 ))}
               </div>
               <div className="flex w-full justify-between text-[12px] text-sub">
                 {link.share.map((s, i) => (
                   <span key={s.routine} className="flex items-center gap-1">
-                    <i aria-hidden className={`w-2 h-2 rounded-full ${['bg-accent', 'bg-ink', 'bg-down', 'bg-up'][i]}`} />
+                    <i aria-hidden className={`w-2 h-2 rounded-full ${['bg-accent', 'bg-ink', 'bg-amber', 'bg-cyan'][i]}`} />
                     {s.routine} {s.pct}%
                   </span>
                 ))}

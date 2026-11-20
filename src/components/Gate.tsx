@@ -105,7 +105,7 @@ export default function Gate({ onOpenChange }: { onOpenChange: (open: boolean) =
   return (
     <div
       ref={root}
-      className={`gate fixed inset-0 z-[100] bg-[#F2ECDF] text-[#141414] ${phase === 'leaving' ? 'gate-leaving' : ''} ${phase === 'signin' ? 'gate-signin' : ''} ${instant ? 'gate-instant' : ''}`}
+      className={`gate fixed inset-0 z-[100] bg-[#F4F4F4] text-[#263238] ${phase === 'leaving' ? 'gate-leaving' : ''} ${phase === 'signin' ? 'gate-signin' : ''} ${instant ? 'gate-instant' : ''}`}
       onClick={() => phase === 'intro' && setIntroDone(true)}
     >
       {/* 바깥: 위치·이동(로그인 단계에서 위로) / 안쪽: 등장 애니메이션 — 둘 다 transform을 써서 층을 나눔 */}
@@ -120,10 +120,10 @@ export default function Gate({ onOpenChange }: { onOpenChange: (open: boolean) =
       <section ref={auth} className="gate-auth" aria-hidden={phase !== 'signin'} aria-label="로그인">
         <div className="text-center mb-2">
           <h1 className="text-[22px] font-bold tracking-[-0.02em]">로그인</h1>
-          <p className="mt-1.5 text-[15px] text-[#6B6358]">카카오 또는 구글 계정으로 시작하세요.</p>
+          <p className="mt-1.5 text-[15px] text-[#5F6B71]">카카오 또는 구글 계정으로 시작하세요.</p>
         </div>
         <LoginButtons />
-        <p className="text-center text-[12px] text-[#6B6358]">운동 기록은 계정에 저장돼요</p>
+        <p className="text-center text-[12px] text-[#5F6B71]">운동 기록은 계정에 저장돼요</p>
       </section>
     </div>
   );

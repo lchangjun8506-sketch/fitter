@@ -39,7 +39,7 @@ export default function LabTab({ sub, onSub, onAskAi, logs, customExercises, toa
             className={`tap group-card text-left p-4 min-h-[150px] flex flex-col justify-between ${TILES.length % 2 && id === TILES[TILES.length - 1].id ? 'col-span-2 min-h-0' : ''}`}
           >
             <span>
-              <span className="w-10 h-10 rounded-[12px] bg-accent/10 text-accent grid place-items-center mb-3">
+              <span className="w-10 h-10 rounded-[12px] bg-accent/10 text-accentfg grid place-items-center mb-3">
                 <Icon aria-hidden className="w-5 h-5" strokeWidth={2} />
               </span>
               <span className="block text-[17px] font-bold">{title}</span>
@@ -213,7 +213,7 @@ function Alerts({ toast }: { toast: (m: string) => void }) {
           </button>
         </div>
         {on && (
-          <button onClick={test} className="tap row w-full text-[17px] font-medium text-accent">10초 테스트</button>
+          <button onClick={test} className="tap row w-full text-[17px] font-medium text-accentfg">10초 테스트</button>
         )}
       </section>
       {err && <p role="alert" className="px-1 -mt-3 text-[14px] text-down leading-relaxed">{err}</p>}

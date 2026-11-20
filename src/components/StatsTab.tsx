@@ -79,7 +79,7 @@ function Home({ logs, inbody, goal, onSub }: Pick<Props, 'logs' | 'inbody' | 'go
               <b className="block text-[17px]">{load.most?.name}</b>
               <span className="block text-sub mt-2.5">부족한 부위</span>
               <b className="block text-[17px] text-down">{load.least.name}</b>
-              <span className="block h-2 rounded-full mt-4 bg-gradient-to-r from-[#F4875B]/20 to-[#C8321F]" aria-hidden />
+              <span className="block h-2 rounded-full mt-4 bg-gradient-to-r from-[#FF9A3C]/20 to-[#F05A00]" aria-hidden />
               <span className="flex justify-between text-[11px] text-sub mt-1"><span>적음</span><span>많음</span></span>
             </span>
           ) : (
@@ -106,7 +106,7 @@ function Home({ logs, inbody, goal, onSub }: Pick<Props, 'logs' | 'inbody' | 'go
             {prs.slice(0, 2).map((p) => (
               <span key={p.ex} className="flex justify-between gap-2">
                 <b className="truncate font-semibold">{p.ex}</b>
-                <span className="num text-[15px] text-accent shrink-0">{p.to}</span>
+                <span className="num text-[15px] text-accentfg shrink-0">{p.to}</span>
               </span>
             ))}
             {!prs.length && <span className="text-sub">꾸준히 기록하면 여기에 떠요</span>}
@@ -130,7 +130,7 @@ function Home({ logs, inbody, goal, onSub }: Pick<Props, 'logs' | 'inbody' | 'go
                 <svg viewBox="0 0 100 24" className="w-full h-6 mt-1.5" aria-hidden>
                   <polyline
                     fill="none"
-                    stroke="rgb(var(--ink))"
+                    stroke="rgb(var(--cyan))"
                     strokeWidth="2"
                     strokeLinejoin="round"
                     points={(() => {
@@ -150,7 +150,7 @@ function Home({ logs, inbody, goal, onSub }: Pick<Props, 'logs' | 'inbody' | 'go
           {st && (st.fat || st.muscle) ? (
             <span className="space-y-0.5">
               {st.fat && <GoalBar s={st.fat} color="bg-accent" compact mini />}
-              {st.muscle && <GoalBar s={st.muscle} color="bg-ink" compact mini />}
+              {st.muscle && <GoalBar s={st.muscle} color="bg-cyan" compact mini />}
             </span>
           ) : (
             <span className="text-[14px] text-sub leading-snug">체지방률 줄이기 · 근육 늘리기 목표를 정해 보세요</span>
@@ -195,7 +195,7 @@ function Volume({ logs }: { logs: WorkoutLog[] }) {
           <div className="flex items-end gap-1.5 h-40" role="img" aria-label={`주별 볼륨: ${weeks.map((w) => `${w.start.slice(5)} ${Math.round(w.vol)}kg`).join(', ')}`}>
             {weeks.map((w, i) => (
               <div key={w.start} className="flex-1 flex flex-col items-center justify-end h-full gap-1">
-                {i === weeks.length - 1 && <span className="num text-[11px] text-accent">{tons(w.vol).v}</span>}
+                {i === weeks.length - 1 && <span className="num text-[11px] text-accentfg">{tons(w.vol).v}</span>}
                 <i className={`w-full rounded-[4px] ${i === weeks.length - 1 ? 'bg-accent' : 'bg-ink/80'}`} style={{ height: `${Math.max(2, (w.vol / max) * 100)}%` }} />
               </div>
             ))}
@@ -214,7 +214,7 @@ function Volume({ logs }: { logs: WorkoutLog[] }) {
             <div key={g.name} className="flex items-center gap-3">
               <span className="w-10 text-[14px] shrink-0">{g.name}</span>
               <div className="flex-1 h-2.5 rounded-full bg-fill overflow-hidden">
-                <div className={`h-full rounded-full ${g.name === load.least.name ? 'bg-down/70' : 'bg-accent'}`} style={{ width: `${(g.sets / gmax) * 100}%` }} />
+                <div className={`h-full rounded-full ${g.name === load.least.name ? 'bg-amber' : 'bg-accent'}`} style={{ width: `${(g.sets / gmax) * 100}%` }} />
               </div>
               <span className="num w-8 text-right text-[17px]">{g.sets}</span>
             </div>
@@ -245,7 +245,7 @@ function Workout({ logs }: { logs: WorkoutLog[] }) {
               <div key={p.ex} className="row justify-between gap-3">
                 <span className="text-[16px] font-semibold truncate">{p.ex}</span>
                 <span className="shrink-0 text-[14px] text-sub">
-                  {p.from} → <b className="num text-[20px] text-accent">{p.to}</b>kg
+                  {p.from} → <b className="num text-[20px] text-accentfg">{p.to}</b>kg
                 </span>
               </div>
             ))

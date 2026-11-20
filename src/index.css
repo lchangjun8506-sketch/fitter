@@ -4,38 +4,45 @@
 
 /* 시맨틱 토큰: 라이트(기본) / 다크 */
 :root {
-  --bg: 242 236 223;       /* 크림 (아이콘 바탕) */
-  --card: 255 253 248;
-  --fill: 233 226 211;
-  --ink: 20 20 20;
-  --onink: 255 253 248;
-  --sub: 107 99 88;        /* 5.6:1 on card */
-  --accent: 218 46 34;     /* 태그 레드, 흰 글자 4.6:1 */
-  --onaccent: 255 253 248;
-  --seg: 255 253 248;
-  --elev: 242 236 223;
-  --elevcard: 255 253 248;
-  --up: 28 122 67;
-  --down: 180 83 9;        /* 정체: 앰버 (레드는 브랜드 전용) */
-  --sep: rgba(60, 40, 10, 0.10);
+  /* 팔레트: 오렌지 #FF6A00 · 차콜 #263238 · 라이트 그레이 #F4F4F4 · 시안 #00B8D4 · 앰버 #FFC857 */
+  --bg: 244 244 244;       /* #F4F4F4 */
+  --card: 255 255 255;
+  --fill: 232 235 236;
+  --ink: 38 50 56;         /* #263238 차콜, 흰 바탕 13:1 */
+  --onink: 255 255 255;
+  --sub: 95 107 113;       /* 흰 바탕 5.5:1 */
+  --accent: 255 106 0;     /* #FF6A00 채우기용 (버튼·막대) */
+  --onaccent: 38 50 56;    /* 오렌지 위 글자는 차콜 4.6:1 (흰 글자는 2.9:1이라 안 씀) */
+  --accentfg: 196 77 0;    /* 오렌지 글자용 #C44D00, 흰 바탕 4.8:1 */
+  --cyan: 0 184 212;       /* #00B8D4 채우기용 (근육·차트) */
+  --amber: 255 200 87;     /* #FFC857 채우기용 (주의·부족) */
+  --seg: 255 255 255;
+  --elev: 244 244 244;
+  --elevcard: 255 255 255;
+  --up: 0 131 143;         /* 좋은 변화 글자 (시안 계열) 4.5:1 */
+  --down: 154 91 0;        /* 주의 글자 (앰버 계열) 5.4:1 */
+  --sep: rgba(38, 50, 56, 0.10);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: 20 18 16;
-    --card: 33 30 27;
-    --fill: 48 44 40;
-    --ink: 242 236 223;
-    --onink: 20 18 16;
-    --sub: 170 162 150;    /* 6.4:1 on card */
-    --accent: 255 82 66;
-    --onaccent: 20 18 16;  /* 6.0:1 */
-    --seg: 74 68 62;
-    --elev: 33 30 27;
-    --elevcard: 48 44 40;
-    --up: 74 200 120;
-    --down: 245 165 36;
-    --sep: rgba(255, 240, 220, 0.12);
+    --bg: 26 34 38;        /* 더 깊은 차콜 */
+    --card: 38 50 56;      /* #263238 */
+    --fill: 51 66 74;
+    --ink: 244 244 244;
+    --onink: 26 34 38;
+    --sub: 169 180 185;    /* 6.2:1 on card */
+    --accent: 255 122 26;
+    --onaccent: 26 34 38;  /* 6.2:1 */
+    --accentfg: 255 138 61;
+    --cyan: 0 184 212;
+    --amber: 255 200 87;
+    --seg: 66 82 90;
+    --elev: 38 50 56;
+    --elevcard: 51 66 74;
+    --up: 77 214 234;
+    --down: 255 200 87;
+    --sep: rgba(244, 244, 244, 0.12);
     color-scheme: dark;
   }
 }
@@ -96,7 +103,7 @@ input[type='date']::-webkit-calendar-picker-indicator { opacity: .45; }
   transform: translate(-50%, -50%);
   transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.gate-tag { position: absolute; right: -0.48em; top: -0.18em; width: 0.36em; height: 0.135em; border-radius: 2px; background: #DA2E22; transform-origin: left; }
+.gate-tag { position: absolute; right: -0.48em; top: -0.18em; width: 0.36em; height: 0.135em; border-radius: 2px; background: #FF6A00; transform-origin: left; }
 /* 로그인 단계: 같은 크기 그대로, 로그인 영역 위 빈 공간의 정가운데로만 올라감 (--lift = 로그인 영역 높이의 절반, Gate에서 측정) */
 .gate-signin .gate-mark { transform: translate(-50%, calc(-50% - var(--lift, 165px))); }
 .gate-auth {

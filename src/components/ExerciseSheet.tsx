@@ -215,7 +215,7 @@ export default function ExerciseSheet({ open, target, logs, busy, onClose, onSav
               <input type="date" aria-label="날짜" value={date} max={todayStr()} onChange={(e) => e.target.value && setDate(e.target.value)} className="absolute inset-0 opacity-0 text-[16px]" />
             </label>
             {!editing && done > 0 && !allDone ? (
-              <button onClick={() => save(finished)} disabled={busy} className="tap h-11 min-w-[44px] -mr-1 px-1 text-right text-[17px] font-semibold text-accent">
+              <button onClick={() => save(finished)} disabled={busy} className="tap h-11 min-w-[44px] -mr-1 px-1 text-right text-[17px] font-semibold text-accentfg">
                 저장
               </button>
             ) : editing ? (
@@ -239,12 +239,12 @@ export default function ExerciseSheet({ open, target, logs, busy, onClose, onSav
               <AnatomyPair primary={info.primary} secondary={info.secondary} height={104} label={`주동근 ${info.primary.map((m) => MUSCLE_LABEL[m]).join(', ')}`} />
               <div className="flex-1 min-w-0 text-[12px] leading-snug space-y-1.5">
                 <div>
-                  <div className="flex items-center gap-1 font-bold"><i aria-hidden className="w-2.5 h-2.5 rounded-[3px] bg-[#D9452B]" />주동근</div>
+                  <div className="flex items-center gap-1 font-bold"><i aria-hidden className="w-2.5 h-2.5 rounded-[3px] bg-[#F05A00]" />주동근</div>
                   <div className="text-sub">{info.primary.map((m) => MUSCLE_LABEL[m]).join(' · ')}</div>
                 </div>
                 {info.secondary.length > 0 && (
                   <div>
-                    <div className="flex items-center gap-1 font-bold"><i aria-hidden className="w-2.5 h-2.5 rounded-[3px] bg-[#EDA48A]" />보조</div>
+                    <div className="flex items-center gap-1 font-bold"><i aria-hidden className="w-2.5 h-2.5 rounded-[3px] bg-amber" />보조</div>
                     <div className="text-sub">{info.secondary.map((m) => MUSCLE_LABEL[m]).join(' · ')}</div>
                   </div>
                 )}

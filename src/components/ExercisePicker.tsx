@@ -58,7 +58,7 @@ export default function ExercisePicker({ open, initialRoutine, logs, custom, onC
         <h4 className="section-label">{list.recent.length ? '다른 종목' : '종목'}</h4>
         <div className="group-card !bg-elevcard">
           {list.rest.map((e) => <Row key={e} e={e} />)}
-          <button onClick={() => onAdd(routine)} className="tap row w-full gap-2 text-[17px] font-medium text-accent shadow-[inset_0_1px_0_var(--sep)]">
+          <button onClick={() => onAdd(routine)} className="tap row w-full gap-2 text-[17px] font-medium text-accentfg shadow-[inset_0_1px_0_var(--sep)]">
             <Plus aria-hidden className="w-5 h-5" strokeWidth={2} /> 새 종목 만들기
           </button>
         </div>

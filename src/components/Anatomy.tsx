@@ -71,37 +71,37 @@ export default function Anatomy({ view, primary = [], secondary = [], heat, heig
     const h = heat?.[m];
     return (
       <g key={i}>
-        <path d={d} fill={primary.includes(m) ? `url(#${id}p)` : secondary.includes(m) ? `url(#${id}s)` : `url(#${id}n)`} stroke="#A9A298" strokeWidth="1.1" strokeLinejoin="round" />
+        <path d={d} fill={primary.includes(m) ? `url(#${id}p)` : secondary.includes(m) ? `url(#${id}s)` : `url(#${id}n)`} stroke="#94A0A6" strokeWidth="1.1" strokeLinejoin="round" />
         {h != null && h > 0 && <path d={d} fill={`url(#${id}p)`} opacity={0.15 + h * 0.85} />}
       </g>
     );
   });
   const side = (
     <>
-      <path d={BASE} fill="#BDB6AC" />
+      <path d={BASE} fill="#AEB8BD" />
       {half}
-      <path d={FIBER[view]} stroke="#A9A298" strokeWidth=".7" fill="none" opacity=".8" />
+      <path d={FIBER[view]} stroke="#94A0A6" strokeWidth=".7" fill="none" opacity=".8" />
     </>
   );
   return (
     <svg viewBox="0 0 200 460" height={height} width={(height * 200) / 460} className={className} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
       <defs>
         <linearGradient id={`${id}n`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#F4F2EE" />
-          <stop offset="1" stopColor="#D9D4CC" />
+          <stop offset="0" stopColor="#F7F9FA" />
+          <stop offset="1" stopColor="#D3DADD" />
         </linearGradient>
         <linearGradient id={`${id}p`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#F4875B" />
-          <stop offset="1" stopColor="#C8321F" />
+          <stop offset="0" stopColor="#FF9A3C" />
+          <stop offset="1" stopColor="#F05A00" />
         </linearGradient>
         <linearGradient id={`${id}s`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#F8C8B4" />
-          <stop offset="1" stopColor="#E9967C" />
+          <stop offset="0" stopColor="#FFE7B8" />
+          <stop offset="1" stopColor="#FFC857" />
         </linearGradient>
       </defs>
       <g>{side}</g>
       <g transform="translate(200 0) scale(-1 1)">{side}</g>
-      <ellipse cx="100" cy="35" rx="20" ry="27" fill={`url(#${id}n)`} stroke="#A9A298" strokeWidth="1.1" />
+      <ellipse cx="100" cy="35" rx="20" ry="27" fill={`url(#${id}n)`} stroke="#94A0A6" strokeWidth="1.1" />
     </svg>
   );
 }

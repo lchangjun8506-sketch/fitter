@@ -96,9 +96,9 @@ export default function TodayPanel({ logs, custom, inbody, onOpen, onOther, toas
         <span className="flex-1 min-w-0">
           <span className={`block text-[16px] font-bold truncate ${log ? 'text-sub' : ''}`}>{exercise}</span>
           <span className="flex items-center gap-1.5 mt-1 min-w-0">
-            <span className="shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded-[5px] bg-accent/10 text-accent">{info.focus}</span>
+            <span className="shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded-[5px] bg-accent/10 text-accentfg">{info.focus}</span>
             <span className="text-[12px] text-sub truncate">
-              {log ? `${setsLabel(log.sets)} 완료` : draft ? <span className="text-accent font-semibold">진행 중 · {draft.done}/{draft.rows.length}세트</span> : sub}
+              {log ? `${setsLabel(log.sets)} 완료` : draft ? <span className="text-accentfg font-semibold">진행 중 · {draft.done}/{draft.rows.length}세트</span> : sub}
             </span>
           </span>
         </span>
@@ -131,11 +131,11 @@ export default function TodayPanel({ logs, custom, inbody, onOpen, onOther, toas
       <section aria-label="이번 주" className="grid grid-cols-7 gap-1 -mt-1">
         {week.map((w) => (
           <div key={w.label} className="flex flex-col items-center gap-1.5">
-            <span className={`text-[11px] font-semibold ${w.today ? 'text-accent' : 'text-sub'}`}>{w.label}</span>
+            <span className={`text-[11px] font-semibold ${w.today ? 'text-accentfg' : 'text-sub'}`}>{w.label}</span>
             <span
               aria-label={`${w.label} ${w.day}일${w.done ? ' 운동함' : ''}`}
               className={`num w-9 h-9 rounded-full grid place-items-center text-[15px] ${
-                w.today ? (w.done ? 'bg-accent text-onaccent' : 'shadow-[inset_0_0_0_2px_rgb(var(--accent))] text-accent') : w.done ? 'bg-ink text-onink' : w.future ? 'text-sub/50' : 'bg-card'
+                w.today ? (w.done ? 'bg-accent text-onaccent' : 'shadow-[inset_0_0_0_2px_rgb(var(--accent))] text-accentfg') : w.done ? 'bg-ink text-onink' : w.future ? 'text-sub/50' : 'bg-card'
               }`}
             >
               {w.day}
@@ -147,7 +147,7 @@ export default function TodayPanel({ logs, custom, inbody, onOpen, onOther, toas
       <section aria-label="오늘의 추천 루틴" className="group-card">
         <div className="flex items-center gap-2 pl-4 pr-3 pt-3.5 pb-2">
           <div className="flex-1 min-w-0">
-            <div className="text-[12px] font-bold text-accent">{ai ? 'AI 추천 루틴' : '추천 루틴'}</div>
+            <div className="text-[12px] font-bold text-accentfg">{ai ? 'AI 추천 루틴' : '추천 루틴'}</div>
             <div className="text-[28px] font-extrabold tracking-[-0.02em] leading-tight mt-0.5">{plan.routine}</div>
             <p className="text-[13px] text-sub leading-snug mt-1.5 line-clamp-3">{plan.reason}</p>
             <p className="text-[13px] font-semibold mt-2">{plan.items.length}종목</p>
@@ -179,7 +179,7 @@ export default function TodayPanel({ logs, custom, inbody, onOpen, onOther, toas
           {ai ? (
             <button onClick={() => setAi(null)} className="tap h-11 px-1 pb-2 text-[14px] text-sub">기본 추천 보기</button>
           ) : (
-            <button onClick={() => setSheet(true)} className="tap h-11 px-1 pb-2 text-[14px] font-semibold text-accent flex items-center gap-1">
+            <button onClick={() => setSheet(true)} className="tap h-11 px-1 pb-2 text-[14px] font-semibold text-accentfg flex items-center gap-1">
               <Sparkles aria-hidden className="w-4 h-4" strokeWidth={2} /> AI에게 묻기
             </button>
           )}

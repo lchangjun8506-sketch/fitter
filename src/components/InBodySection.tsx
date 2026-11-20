@@ -97,7 +97,7 @@ export default function InBodySection({ toast, records, reload: load }: Props) {
         onClick={() => input.current?.click()}
         className="tap w-full group-card row gap-3 min-h-[64px] text-left disabled:opacity-70"
       >
-        <span className="w-10 h-10 rounded-full bg-accent/10 text-accent grid place-items-center shrink-0">
+        <span className="w-10 h-10 rounded-full bg-accent/10 text-accentfg grid place-items-center shrink-0">
           {scanning ? <Loader2 aria-hidden className="w-5 h-5 animate-spin" /> : <ScanLine aria-hidden className="w-5 h-5" strokeWidth={1.75} />}
         </span>
         <span className="flex-1">

@@ -24,7 +24,7 @@ export default function Sheet({ open, title, onClose, action, children }: Props)
           <button onClick={onClose} className="tap h-11 min-w-[44px] px-1 text-left text-[17px] text-sub">취소</button>
           <h3 className="text-[17px] font-semibold">{title}</h3>
           {action ? (
-            <button disabled={action.disabled} onClick={action.onClick} className="tap h-11 min-w-[44px] px-1 text-right text-[17px] font-semibold text-accent disabled:text-sub/50">
+            <button disabled={action.disabled} onClick={action.onClick} className="tap h-11 min-w-[44px] px-1 text-right text-[17px] font-semibold text-accentfg disabled:text-sub/50">
               {action.label}
             </button>
           ) : (

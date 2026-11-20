@@ -61,7 +61,7 @@ function ChallengeCard({ c, onRespond, onCancel }: { c: Challenge; onRespond: (a
     <div className="px-4 py-3.5">
       <div className="flex items-baseline justify-between">
         <span className="text-[15px] font-semibold">vs {c.opponent_handle}</span>
-        <span className={`text-[13px] font-semibold ${result === '승리' ? 'text-accent' : 'text-sub'}`}>
+        <span className={`text-[13px] font-semibold ${result === '승리' ? 'text-accentfg' : 'text-sub'}`}>
           {result ?? (left === 0 ? '오늘 마감' : `D-${left}`)}
         </span>
       </div>
@@ -139,7 +139,7 @@ export default function BattleTab({ toast, customExercises }: { toast: (m: strin
           <button onClick={() => navigator.clipboard?.writeText(handle).then(() => toast('복사했어요'))} aria-label="아이디 복사" className="tap w-11 h-11 grid place-items-center text-sub">
             <Copy aria-hidden className="w-5 h-5" strokeWidth={1.75} />
           </button>
-          <button onClick={() => shareHandle(handle, toast)} aria-label="아이디 공유" className="tap w-11 h-11 grid place-items-center text-accent">
+          <button onClick={() => shareHandle(handle, toast)} aria-label="아이디 공유" className="tap w-11 h-11 grid place-items-center text-accentfg">
             <Share aria-hidden className="w-5 h-5" strokeWidth={1.75} />
           </button>
         </div>
@@ -163,7 +163,7 @@ export default function BattleTab({ toast, customExercises }: { toast: (m: strin
         >
           <input value={friendInput} onChange={(e) => setFriendInput(e.target.value)} aria-label="친구 아이디" placeholder="친구 아이디 (예: 차앵-0164)" autoCapitalize="off" autoCorrect="off" enterKeyHint="send"
             className="flex-1 min-w-0 bg-transparent px-4 h-[52px] text-[16px] placeholder:text-sub/70 focus:outline-none" />
-          <button type="submit" aria-label="친구 신청" disabled={!friendInput.trim()} className="tap w-11 h-11 grid place-items-center text-accent disabled:text-sub/40">
+          <button type="submit" aria-label="친구 신청" disabled={!friendInput.trim()} className="tap w-11 h-11 grid place-items-center text-accentfg disabled:text-sub/40">
             <UserPlus aria-hidden className="w-5 h-5" strokeWidth={1.75} />
           </button>
         </form>
@@ -196,7 +196,7 @@ export default function BattleTab({ toast, customExercises }: { toast: (m: strin
               setPick({ friend: friends[0]?.user_id ?? null, exercise: null, days: 7 });
               setSheet(true);
             }}
-            className="tap h-9 px-1 pb-2 text-[15px] font-semibold text-accent disabled:text-sub/50"
+            className="tap h-9 px-1 pb-2 text-[15px] font-semibold text-accentfg disabled:text-sub/50"
           >
             도전장 보내기
           </button>
@@ -222,7 +222,7 @@ export default function BattleTab({ toast, customExercises }: { toast: (m: strin
         <div className="group-card">
           {board.map((b, i) => (
             <div key={b.user_id} className={`row gap-3 py-2.5 ${b.is_me ? 'bg-accent/[0.06]' : ''}`}>
-              <span className={`num w-6 text-[20px] ${i === 0 && b.streak > 0 ? 'text-accent' : 'text-sub'}`}>{i + 1}</span>
+              <span className={`num w-6 text-[20px] ${i === 0 && b.streak > 0 ? 'text-accentfg' : 'text-sub'}`}>{i + 1}</span>
               <div className="flex-1 min-w-0">
                 <div className="text-[16px] font-semibold truncate">{b.handle}{b.is_me && <span className="text-sub font-normal"> (나)</span>}</div>
                 <div className="text-[13px] text-sub">최근 7일 중 {b.days_7}일 운동</div>

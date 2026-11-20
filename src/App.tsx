@@ -173,7 +173,7 @@ export default function App() {
       <header className="max-w-md mx-auto px-5 pt-[max(env(safe-area-inset-top),20px)] pb-5">
         <div className="flex items-center gap-2 h-9 -mb-2">
           {subPage ? (
-            <button onClick={() => navigate(toHome)} className="tap -ml-1.5 h-9 flex items-center gap-0.5 text-[15px] font-medium text-accent">
+            <button onClick={() => navigate(toHome)} className="tap -ml-1.5 h-9 flex items-center gap-0.5 text-[15px] font-medium text-accentfg">
               <ChevronLeft aria-hidden className="w-5 h-5" strokeWidth={2.25} /> {TITLES[tab]}
             </button>
           ) : (
@@ -266,7 +266,7 @@ export default function App() {
                 key={id}
                 onClick={() => go(id)}
                 aria-current={on ? 'page' : undefined}
-                className={`tap flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors duration-200 ${on ? 'text-accent' : 'text-sub'}`}
+                className={`tap flex flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors duration-200 ${on ? 'text-accentfg' : 'text-sub'}`}
               >
                 <Icon aria-hidden className="w-6 h-6" strokeWidth={on ? 2.25 : 1.75} />
                 {label}
