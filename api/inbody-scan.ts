@@ -5,9 +5,11 @@
  *
  * 필요한 Vercel 환경 변수:
  *   GEMINI_API_KEY                              서버 전용 (VITE_ 접두사 금지)
- *   GEMINI_MODEL (선택)                          기본 gemini-3.6-flash (붐비면 gemini-3.5-flash-lite)
+ *   GEMINI_MODEL (선택)                          기본 gemini-3.6-flash (붐비면 gemini-3.5-flash-lite, api/_gemini.ts)
  *   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY   로그인 확인·사용량 기록용 (앱과 공유)
  */
+import { checkUser, geminiJson, json } from './_gemini';
+
 export const maxDuration = 60;
 
 const DAILY_LIMIT = 10;
@@ -51,23 +53,10 @@ const PROMPT = `첨부한 파일은 체성분 분석기(인바디 등) 결과지
 - 측정 날짜는 YYYY-MM-DD 형식. 없으면 null.
 - 체성분 결과지가 아니면 is_body_composition_sheet를 false로 하고 나머지는 null.`;
 
-const json = (status: number, body: unknown) =>
-  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-
-const sbUrl = () => process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-const sbKey = () => process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
-
 export async function POST(request: Request): Promise<Response> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return json(503, { error: 'AI 스캔이 아직 설정되지 않았어요. 직접 입력해 주세요' });
-  const url = sbUrl(), key = sbKey();
-  if (!url || !key) return json(500, { error: '서버에 Supabase 설정이 없어요' });
-
-  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-  if (!token) return json(401, { error: '로그인이 필요해요' });
-  const headers = { apikey: key, authorization: `Bearer ${token}` };
-  const user = await fetch(`${url}/auth/v1/user`, { headers });
-  if (!user.ok) return json(401, { error: '로그인이 필요해요' });
+  if (!process.env.GEMINI_API_KEY) return json(503, { error: 'AI 스캔이 아직 설정되지 않았어요. 직접 입력해 주세요' });
+  const user = await checkUser(request, 'inbody', DAILY_LIMIT);
+  if (!user.ok) return json(user.status, { error: user.status === 429 ? `AI 스캔은 하루 ${DAILY_LIMIT}번까지예요. 직접 입력해 주세요` : user.error });
 
   let body: { mime?: string; data?: string };
   try {
@@ -78,48 +67,9 @@ export async function POST(request: Request): Promise<Response> {
   if (!body.mime || !MIMES.includes(body.mime) || typeof body.data !== 'string' || !body.data) return json(400, { error: '사진(JPG·PNG) 또는 PDF만 읽을 수 있어요' });
   if (body.data.length > MAX_BASE64) return json(413, { error: '파일이 너무 커요 (3MB 이하로 올려 주세요)' });
 
-  // 하루 사용 횟수 (ai_usage 표가 없으면 제한 없이 진행)
-  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-  const usage = await fetch(`${url}/rest/v1/ai_usage?select=id&kind=eq.inbody&created_at=gte.${since}`, { headers: { ...headers, prefer: 'count=exact', range: '0-0' } });
-  const tracked = usage.ok;
-  if (tracked && Number(usage.headers.get('content-range')?.split('/')[1] ?? 0) >= DAILY_LIMIT) return json(429, { error: `AI 스캔은 하루 ${DAILY_LIMIT}번까지예요. 직접 입력해 주세요` });
-
-  // 기본 모델이 붐비면(503·429) 한 번 더 다른 모델로
-  const models = [...new Set([process.env.GEMINI_MODEL || 'gemini-3.6-flash', 'gemini-3.5-flash-lite'])];
-  let res: Response | null = null;
-  let model = models[0];
-  for (model of models) {
-    try {
-      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ inlineData: { mimeType: body.mime, data: body.data } }, { text: PROMPT }] }],
-          generationConfig: { responseMimeType: 'application/json', responseJsonSchema: SCHEMA, temperature: 0 },
-        }),
-      });
-    } catch {
-      res = null;
-      continue;
-    }
-    if (res.status !== 503 && res.status !== 429) break;
-  }
-  if (!res) return json(502, { error: 'AI 서버에 연결하지 못했어요' });
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    console.error('gemini', model, res.status, detail.slice(0, 500));
-    if (res.status === 429 || res.status === 503) return json(503, { error: 'AI가 잠시 붐벼요. 조금 뒤에 다시 시도해 주세요' });
-    return json(502, { error: 'AI가 결과지를 읽지 못했어요' });
-  }
-
-  const out = (await res.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
-  const text = out.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    return json(502, { error: 'AI 응답을 이해하지 못했어요' });
-  }
+  const r = await geminiJson({ schema: SCHEMA, parts: [{ inlineData: { mimeType: body.mime, data: body.data } }, { text: PROMPT }] });
+  if (!r.ok) return json(r.status, { error: r.status === 502 ? 'AI가 결과지를 읽지 못했어요' : r.error });
+  const parsed = r.data as Record<string, unknown>;
   if (parsed.is_body_composition_sheet === false) return json(422, { error: '인바디(체성분) 결과지가 아닌 것 같아요' });
 
   const values: Record<string, number | string | null> = {};
@@ -130,6 +80,6 @@ export async function POST(request: Request): Promise<Response> {
   const d = typeof parsed.measured_at === 'string' ? parsed.measured_at : '';
   values.measured_at = /^20\d{2}-\d{2}-\d{2}$/.test(d) ? d : null;
 
-  if (tracked) await fetch(`${url}/rest/v1/ai_usage`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ kind: 'inbody' }) }).catch(() => {});
-  return json(200, { values, model });
+  await user.record();
+  return json(200, { values, model: r.model });
 }

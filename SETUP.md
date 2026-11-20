@@ -87,7 +87,7 @@ Vercel → 프로젝트 → **Settings → Environment Variables** 에 추가:
 |---|---|---|
 | `VITE_SUPABASE_URL` | 1-3의 Project URL | 앱·서버 공용 |
 | `VITE_SUPABASE_ANON_KEY` | 1-3의 Publishable key (`sb_publishable_...`) | 공개돼도 되는 키 (권한은 DB 규칙이 막음) |
-| `ANTHROPIC_API_KEY` | Claude API 키 (console.anthropic.com → API Keys) | **AI 루틴 추천용, 서버 전용. `VITE_`를 붙이지 마세요.** 없으면 무료 기본 추천만 동작 |
+| `GEMINI_API_KEY` | Google AI Studio API 키 | **AI 루틴 추천·인바디 스캔용, 서버 전용. `VITE_`를 붙이지 마세요.** 없으면 기본 추천·직접 입력만 동작 |
 
 저장 후 **Deployments → 최신 배포 → Redeploy** 하면 적용됩니다.
 
@@ -101,24 +101,12 @@ Vercel → 프로젝트 → **Settings → Environment Variables** 에 추가:
 4. Redeploy
 - 무료 등급은 보낸 데이터가 구글 서비스 개선에 쓰일 수 있어요. 결제를 등록한 유료 등급은 보통 그렇지 않아요. 정확한 조건은 Gemini API 가격 페이지의 "Used to improve our products" 줄에서 확인하세요.
 
-## AI 루틴 추천 (선택)
+## AI 루틴 추천 (Gemini)
 
-- 기록 탭의 **오늘의 추천 루틴**은 무료로 휴대폰에서 계산돼요. 설정이 필요 없어요.
-- **AI에게 자세히 묻기**를 쓰려면:
-  1. https://console.anthropic.com 가입 → Billing에서 크레딧 충전 (최소 5달러)
-  2. API Keys → Create Key → Vercel 환경 변수 `ANTHROPIC_API_KEY`에 넣고 Redeploy
-  3. Supabase에서 `0003_ai_usage.sql` 실행
-- 가벼운 모델(Claude Haiku)을 써서 한 번에 약 1~2원, 계정당 하루 5번까지예요 (`api/routine.ts`의 `DAILY_LIMIT`).
+- 기록 탭의 **추천 루틴**은 휴대폰에서 계산돼요. 설정이 필요 없어요.
+- **AI에게 묻기**는 인바디 스캔과 같은 `GEMINI_API_KEY`를 써요 (위 "인바디 AI 스캔" 설정과 동일).
+- 계정당 하루 5번까지예요 (`api/routine.ts`의 `DAILY_LIMIT`, 사용 기록은 0003의 ai_usage 표. 표가 없으면 제한 없이 동작).
 - AI에는 최근 45일 종목별 핵심 수치와 최근 인바디 2회만 보내요. 메모·사진은 보내지 않아요.
-
-## 워치 휴식 알림 (실험실)
-
-- 휴식이 끝나면 잠금화면·애플워치로 알림을 보내요. 무료예요.
-- 설정:
-  1. Supabase SQL Editor에서 `0005_rest_push.sql` 실행
-  2. Vercel 환경 변수 `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (이미 넣어 둠. 새로 만들려면 `npx web-push generate-vapid-keys`)
-- 사용: 아이폰 Safari → 공유 → 홈 화면에 추가 → 홈 화면의 FITTER → 실험실 → 워치 휴식 알림 → 켜기 → 10초 테스트
-- 워치는 아이폰이 잠겨 있을 때 알림을 받아요 (iOS 16.4 이상). 마지막으로 켠 기기 한 대로만 보내요.
 
 ## 확인 순서
 
