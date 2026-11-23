@@ -97,7 +97,7 @@ Vercel → 프로젝트 → **Settings → Environment Variables** 에 추가:
 
 1. https://aistudio.google.com 에 구글 계정으로 로그인 → **Get API key** → **Create API key**
 2. Vercel → 프로젝트 → Settings → Environment Variables → `GEMINI_API_KEY`에 붙여넣기 (Production, **Sensitive** 권장, `VITE_`를 붙이지 마세요)
-3. (선택) 모델을 바꾸려면 `GEMINI_MODEL` (기본 `gemini-3.6-flash`, 붐비면 `gemini-3.5-flash-lite`)
+3. (선택) 모델을 바꾸려면 `GEMINI_MODEL` (기본은 `gemini-3.5-flash-lite` → `gemini-3.1-flash-lite` → `gemini-flash-lite-latest` → `gemini-3.6-flash` 순서로, 붐비거나 15초 안에 답이 없으면 다음 모델)
 4. Redeploy
 - 무료 등급은 보낸 데이터가 구글 서비스 개선에 쓰일 수 있어요. 결제를 등록한 유료 등급은 보통 그렇지 않아요. 정확한 조건은 Gemini API 가격 페이지의 "Used to improve our products" 줄에서 확인하세요.
 

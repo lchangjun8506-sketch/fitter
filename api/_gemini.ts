@@ -1,6 +1,7 @@
 /**
  * Google Gemini 호출 공용 (파일 이름이 _로 시작하면 Vercel이 주소로 열지 않음)
- * 기본 모델이 붐비거나(503·429) 35초 안에 답하지 않으면 가벼운 모델로 한 번 더 시도.
+ * 무료 등급에서 일반 Flash 모델이 자주 붐벼서, 빠른 Lite 모델부터 차례로 시도.
+ * 붐비면(503·429·500) 바로 다음 모델로, 15초 안에 답하지 않으면 끊고 다음 모델로.
  * 키: GEMINI_API_KEY (서버 전용), 모델: GEMINI_MODEL (선택)
  */
 export type Part = { text: string } | { inlineData: { mimeType: string; data: string } };
@@ -12,15 +13,15 @@ export type GeminiResult =
 export async function geminiJson(opts: { parts: Part[]; schema: object; system?: string; temperature?: number }): Promise<GeminiResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { ok: false, status: 503, error: 'AI 기능이 아직 설정되지 않았어요' };
-  const models = [...new Set([process.env.GEMINI_MODEL || 'gemini-3.6-flash', 'gemini-3.5-flash-lite'])];
+  const models = [...new Set([process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.6-flash'])];
   let res: Response | null = null;
   let bodyText = '';
   let model = models[0];
   for (const [i, m] of models.entries()) {
     model = m;
-    // 마지막 모델은 넉넉히, 앞 모델은 35초에서 끊고 다음으로
+    // 앞 모델은 15초에서 끊고 다음으로, 마지막 모델만 넉넉히
     const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), i < models.length - 1 ? 35_000 : 50_000);
+    const timer = setTimeout(() => ac.abort(), i < models.length - 1 ? 15_000 : 40_000);
     try {
       res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST',
@@ -39,12 +40,12 @@ export async function geminiJson(opts: { parts: Part[]; schema: object; system?:
     } finally {
       clearTimeout(timer);
     }
-    if (res.status !== 503 && res.status !== 429) break;
+    if (![429, 500, 503].includes(res.status)) break;
   }
   if (!res) return { ok: false, status: 502, error: 'AI 서버에 연결하지 못했어요' };
   if (!res.ok) {
     console.error('gemini', model, res.status, bodyText.slice(0, 500));
-    if (res.status === 429 || res.status === 503) return { ok: false, status: 503, error: 'AI가 잠시 붐벼요. 조금 뒤에 다시 시도해 주세요' };
+    if ([429, 500, 503].includes(res.status)) return { ok: false, status: 503, error: 'AI가 잠시 붐벼요. 조금 뒤에 다시 시도해 주세요' };
     return { ok: false, status: 502, error: 'AI가 답하지 못했어요' };
   }
   let out: { candidates?: { finishReason?: string; content?: { parts?: { text?: string }[] } }[] };

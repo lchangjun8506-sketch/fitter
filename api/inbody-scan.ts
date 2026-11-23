@@ -5,12 +5,12 @@
  *
  * 필요한 Vercel 환경 변수:
  *   GEMINI_API_KEY                              서버 전용 (VITE_ 접두사 금지)
- *   GEMINI_MODEL (선택)                          기본 gemini-3.6-flash (붐비면 gemini-3.5-flash-lite, api/_gemini.ts)
+ *   GEMINI_MODEL (선택)                          기본 gemini-3.5-flash-lite부터 차례로 (api/_gemini.ts)
  *   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY   로그인 확인·사용량 기록용 (앱과 공유)
  */
 import { checkUser, geminiJson, json } from './_gemini.js';
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const DAILY_LIMIT = 10;
 const MAX_BASE64 = 4_000_000; // Vercel 요청 크기 한도(4.5MB) 안쪽
