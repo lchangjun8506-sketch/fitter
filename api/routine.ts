@@ -88,7 +88,10 @@ export async function POST(request: Request): Promise<Response> {
   const valid =
     p && (ROUTINES as readonly string[]).includes(p.routine) && typeof p.summary === 'string' && Array.isArray(p.items) && p.items.length > 0 &&
     p.items.every((i) => typeof i.exercise === 'string' && Array.isArray(i.sets) && i.sets.every((s) => typeof s.weight === 'number' && typeof s.reps === 'number'));
-  if (!valid) return json(502, { error: '추천을 만들지 못했어요. 다시 시도해 주세요' });
+  if (!valid) {
+    console.warn('routine invalid shape', r.model, JSON.stringify(p).slice(0, 300));
+    return json(502, { error: '추천을 만들지 못했어요. 다시 시도해 주세요' });
+  }
   p.items = p.items.slice(0, 10).map((i) => ({ ...i, tip: i.tip ?? '', sets: i.sets.slice(0, 8).map((s) => ({ weight: snapWeight(s.weight), reps: snapReps(s.reps) })) }));
   p.caution = p.caution || null;
 

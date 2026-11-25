@@ -248,10 +248,15 @@ export default function TodayPanel({ logs, custom, inbody, onOpen, onOther, toas
             </div>
             {busy && (
               <p className="flex items-center gap-2 px-1 text-[14px] text-sub">
-                <Loader2 aria-hidden className="w-4 h-4 animate-spin" /> 기록을 살펴보고 루틴을 짜는 중이에요…
+                <Loader2 aria-hidden className="w-4 h-4 animate-spin shrink-0" /> 기록을 살펴보고 루틴을 짜는 중이에요… AI가 붐비면 1분 정도 걸릴 수 있어요
               </p>
             )}
-            {err && <p role="alert" className="px-1 text-[14px] text-down">{err}</p>}
+            {err && (
+              <p role="alert" className="px-1 text-[14px] text-down leading-relaxed">
+                {err}
+                <span className="block text-sub mt-1">기록 탭의 기본 추천은 그대로 쓸 수 있어요. 잠시 뒤 오른쪽 위 '추천 받기'를 다시 눌러 주세요.</span>
+              </p>
+            )}
           </>
         )}
       </Sheet>
